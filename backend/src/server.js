@@ -10,9 +10,10 @@ const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 app.use(cors({
-  origin: '*',
-  methods: '*',
-  allowedHeaders: '*'
+  origin: true, // Разрешает запросы с любого адреса, который прислал браузер
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
 app.use(express.json());
 
