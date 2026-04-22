@@ -66,7 +66,12 @@ app.get('/analytics', auth.authMiddleware, async (req, res) => {
     sourceAggr.forEach(item => { bySource[item._id || 'Не указано'] = item.count; });
 
   
-    const teamMembers = await User.countDocuments();
+    let teamMembers = 0;
+if (req.user.role === 'admin') {
+  teamMembers = await User.countDocuments(); 
+} else if (req.user.role === 'team_lead') {
+  teamMembers = await User.countDocuments({ teamId: req.user.id }); 
+}
 
     res.json({
       totalLeads,
