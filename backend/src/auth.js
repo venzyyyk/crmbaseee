@@ -41,7 +41,7 @@ function register() {
      
       const newUser = new User({
         email: normEmail,
-        password: password, 
+        passwordHash: String(password),
         role: role === 'team_lead' ? 'team_lead' : 'user'
       });
 
