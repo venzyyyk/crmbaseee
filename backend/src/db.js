@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
-const User = require('./models/User'); 
+const User = require('./User'); 
 
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    console.log('🚀 MongoDB подключена!');
+    console.log('MongoDB подключена!');
 
     
     const adminEmail = 'admin@crm.local';
@@ -17,7 +17,7 @@ const connectDB = async () => {
         role: 'admin'
       });
       await newAdmin.save();
-      console.log('👤 Дефолтный админ создан');
+      console.log('Дефолтный админ создан');
     }
   } catch (err) {
     console.error('Ошибка базы:', err);
