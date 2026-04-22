@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:3000'
+const API_BASE = 'https://crmbaseee.onrender.com'
 
 async function safeJson(res) {
   const text = await res.text()
