@@ -1,82 +1,87 @@
-const jwt = require('jsonwebtoken')
-const { run, get } = require('./db')
+const jwt = require('jsonwebtoken');
+const User = require('./models/User'); // Подключаем нашу модель
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecret123'
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecret123';
 
+// Создаем токен (теперь используем _id из MongoDB)
 function issueToken(user) {
   return jwt.sign(
-    { id: user.Id, email: user.Email, role: user.Role, teamId: user.TeamId || null },
+    { id: user._id, email: user.email, role: user.role, teamId: user.teamId || null },
     JWT_SECRET,
     { expiresIn: '7d' }
-  )
+  );
 }
 
+// Прослойка проверки авторизации (остается почти такой же)
 function authMiddleware(req, res, next) {
-  const header = req.headers.authorization
-  if (!header) return res.status(401).json({ message: 'No token' })
-  const token = header.split(' ')[1]
+  const header = req.headers.authorization;
+  if (!header) return res.status(401).json({ message: 'No token' });
+  const token = header.split(' ')[1];
   try {
-    req.user = jwt.verify(token, JWT_SECRET)
-    next()
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
   } catch (e) {
-    return res.status(401).json({ message: 'Invalid token' })
+    return res.status(401).json({ message: 'Invalid token' });
   }
 }
 
+// Регистрация через MongoDB
 function register() {
   return async (req, res) => {
-    const { email, password, role = 'user', teamName = '' } = req.body || {}
-    const normEmail = String(email || '').trim().toLowerCase()
-    const normRole = role === 'team_lead' ? 'team_lead' : 'user'
+    const { email, password, role = 'user' } = req.body || {};
+    const normEmail = String(email || '').trim().toLowerCase();
 
-    if (!normEmail || !password) return res.status(400).json({ message: 'Введите email и пароль' })
+    if (!normEmail || !password) return res.status(400).json({ message: 'Введите email и пароль' });
 
     try {
-      const exists = await get(`SELECT Id FROM Users WHERE Email=?`, [normEmail])
-      if (exists) return res.status(409).json({ message: 'Email уже зарегистрирован' })
+      // Проверяем, есть ли такой юзер
+      const exists = await User.findOne({ email: normEmail });
+      if (exists) return res.status(409).json({ message: 'Email уже зарегистрирован' });
 
-      const createdAt = new Date().toISOString()
-      let teamId = null
+      // Создаем нового юзера
+      const newUser = new User({
+        email: normEmail,
+        password: password, // В идеале тут нужен bcrypt, но пока оставляем как было у тебя
+        role: role === 'team_lead' ? 'team_lead' : 'user'
+      });
 
-      const userInsert = await run(
-        `INSERT INTO Users(Email, PasswordHash, Role, CreatedAt, TeamId) VALUES(?,?,?,?,NULL)`,
-        [normEmail, String(password), normRole, createdAt]
-      )
-      const userId = userInsert.lastID
+      await newUser.save();
 
-      if (normRole === 'team_lead') {
-        const teamInsert = await run(
-          `INSERT INTO Teams(Name, LeadUserId, CreatedAt) VALUES(?,?,?)`,
-          [String(teamName || `Team ${normEmail.split('@')[0]}`).trim(), userId, createdAt]
-        )
-        teamId = teamInsert.lastID
-        await run(`UPDATE Users SET TeamId=? WHERE Id=?`, [teamId, userId])
-      }
-
-      const user = await get(`SELECT Id, Email, Role, TeamId FROM Users WHERE Id=?`, [userId])
-      return res.json({ token: issueToken(user), user })
+      return res.json({ 
+        token: issueToken(newUser), 
+        user: { id: newUser._id, email: newUser.email, role: newUser.role } 
+      });
     } catch (err) {
-      return res.status(500).json({ message: 'DB error: ' + (err?.message || 'unknown') })
+      return res.status(500).json({ message: 'Ошибка базы: ' + err.message });
     }
-  }
+  };
 }
 
+// Логин через MongoDB
 function login() {
   return async (req, res) => {
-    const { email, password } = req.body || {}
-    const normEmail = String(email || '').trim().toLowerCase()
-    if (!normEmail || !password) return res.status(400).json({ message: 'Введите email и пароль' })
+    const { email, password } = req.body || {};
+    const normEmail = String(email || '').trim().toLowerCase();
+
+    if (!normEmail || !password) return res.status(400).json({ message: 'Введите email и пароль' });
 
     try {
-      const user = await get(`SELECT Id, Email, PasswordHash, Role, TeamId FROM Users WHERE Email=? LIMIT 1`, [normEmail])
-      if (!user || user.PasswordHash !== String(password)) {
-        return res.status(401).json({ message: 'Неверные данные' })
+      // Ищем юзера в MongoDB
+      const user = await User.findOne({ email: normEmail });
+      
+      // Проверяем пароль (простое сравнение строк, как в твоем старом коде)
+      if (!user || user.password !== String(password)) {
+        return res.status(401).json({ message: 'Неверные данные' });
       }
-      return res.json({ token: issueToken(user), user: { id: user.Id, email: user.Email, role: user.Role, teamId: user.TeamId || null } })
+
+      return res.json({ 
+        token: issueToken(user), 
+        user: { id: user._id, email: user.email, role: user.role, teamId: user.teamId || null } 
+      });
     } catch (err) {
-      return res.status(500).json({ message: 'DB error' })
+      return res.status(500).json({ message: 'Ошибка входа: ' + err.message });
     }
-  }
+  };
 }
 
-module.exports = { register, login, authMiddleware, issueToken }
+module.exports = { register, login, authMiddleware, issueToken };
