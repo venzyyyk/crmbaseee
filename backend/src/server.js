@@ -23,8 +23,8 @@ function mapUser(u) {
   }
 }
 
-app.post('/auth/register', auth.register())
-app.post('/auth/login', auth.login())
+//app.post('/auth/register', auth.register())
+//app.post('/auth/login', auth.login())
 app.get('/me', auth.authMiddleware, async (req, res) => {
   const user = await get(`SELECT Id, Email, Role, TeamId FROM Users WHERE Id=?`, [req.user.id])
   const team = user?.TeamId ? await get(`SELECT * FROM Teams WHERE Id=?`, [user.TeamId]) : null
@@ -34,9 +34,9 @@ app.get('/me', auth.authMiddleware, async (req, res) => {
 //app.get('/leads', auth.authMiddleware, leads.getLeads())
 //app.post('/leads', auth.authMiddleware, leads.createLead())
 //app.post('/leads/:id/status', auth.authMiddleware, leads.updateStatus())
-app.put('/leads/:id', auth.authMiddleware, leads.updateLead())
-app.put('/leads/:id/deadline', auth.authMiddleware, leads.updateDeadline())
-app.delete('/leads/:id', auth.authMiddleware, leads.deleteLead())
+//app.put('/leads/:id', auth.authMiddleware, leads.updateLead())
+//app.put('/leads/:id/deadline', auth.authMiddleware, leads.updateDeadline())
+//app.delete('/leads/:id', auth.authMiddleware, leads.deleteLead())
 
 app.get('/analytics', auth.authMiddleware, async (req, res) => {
   try {
@@ -258,8 +258,9 @@ app.post('/team/upload-base', auth.authMiddleware, upload.single('basefile'), as
   }
 })
 
-init().then(() => {
-  app.listen(3000, () => console.log('API running on http://localhost:3000'))
-}).catch((e) => {
-  console.error('Failed to init DB', e)
-})
+connectDB(); 
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
