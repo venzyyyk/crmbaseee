@@ -16,15 +16,15 @@ app.use(express.json())
 
 function mapUser(u) {
   return {
-    id: u.Id,
-    email: u.Email,
-    role: u.Role,
-    teamId: u.TeamId || null
+    id: u._id,      
+    email: u.email, 
+    role: u.role,   
+    teamId: u.teamId || null
   }
 }
 
-//app.post('/auth/register', auth.register())
-//app.post('/auth/login', auth.login())
+app.post('/auth/register', auth.register())
+app.post('/auth/login', auth.login())
 app.get('/me', auth.authMiddleware, async (req, res) => {
   const user = await get(`SELECT Id, Email, Role, TeamId FROM Users WHERE Id=?`, [req.user.id])
   const team = user?.TeamId ? await get(`SELECT * FROM Teams WHERE Id=?`, [user.TeamId]) : null
