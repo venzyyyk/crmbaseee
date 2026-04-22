@@ -9,7 +9,11 @@ const User = require('./User');
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
-app.use(cors());
+app.use(cors({
+  origin: ['https://crmbase-3au0.onrender.com'], 
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 function mapUser(u) {
