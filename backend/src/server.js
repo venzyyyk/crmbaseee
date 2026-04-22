@@ -1,14 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
+const mongoose = require('mongoose'); 
 const connectDB = require('./db');
 const auth = require('./auth');
 const leads = require('./leads');
-const User = require('./User');
+const User = require('./User'); 
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
-
 
 app.use(cors({
   origin: true,
@@ -18,6 +18,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// --- АВТОРИЗАЦИЯ ---
 app.post('/auth/register', auth.register());
 app.post('/auth/login', auth.login());
 
@@ -41,44 +42,86 @@ app.post('/leads/:id/status', auth.authMiddleware, leads.updateStatus);
 app.put('/leads/:id', auth.authMiddleware, leads.updateLead);
 app.delete('/leads/:id', auth.authMiddleware, leads.deleteLead);
 
+app.get('/team', auth.authMiddleware, async (req, res) => {
+  try {
+    const targetTeamId = req.user.role === 'team_lead' ? req.user.id : req.user.teamId;
+    if (!targetTeamId) return res.json({ team: null, members: [] });
 
-app.get('/team', auth.authMiddleware, async (req, res) => res.json({ team: null, members: [] }));
+    const members = await User.find({
+      $or: [{ _id: targetTeamId }, { teamId: targetTeamId }]
+    });
+
+    const mappedMembers = members.map(u => ({
+      id: u._id.toString(),
+      email: u.email,
+      role: u.role,
+      teamId: u.teamId
+    }));
+
+    res.json({ team: { id: targetTeamId, name: 'Моя команда' }, members: mappedMembers });
+  } catch (e) {
+    res.status(500).json({ message: 'Ошибка БД' });
+  }
+});
+
+
+app.post('/team/members', auth.authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'team_lead' && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Только тимлид может добавлять участников' });
+    }
+
+    const { email, password, role = 'member' } = req.body;
+    const normEmail = String(email || '').trim().toLowerCase();
+    
+    const exists = await User.findOne({ email: normEmail });
+    if (exists) return res.status(409).json({ message: 'Email уже зарегистрирован' });
+
+    const newUser = new User({
+      email: normEmail,
+      passwordHash: String(password),
+      role: role,
+      teamId: req.user.role === 'admin' ? req.body.teamId : req.user.id
+    });
+    await newUser.save();
+
+    res.json({ 
+      ok: true, 
+      member: { id: newUser._id.toString(), email: newUser.email, role: newUser.role } 
+    });
+  } catch (e) {
+    res.status(500).json({ message: 'Ошибка добавления участника' });
+  }
+});
+
+
 app.get('/analytics', auth.authMiddleware, async (req, res) => {
   try {
-    const mongoose = require('mongoose');
     const Lead = mongoose.model('Lead'); 
-    const User = mongoose.model('User'); 
-
+    
+    let teamMembers = 0;
+    if (req.user.role === 'admin') {
+      teamMembers = await User.countDocuments();
+    } else if (req.user.role === 'team_lead') {
+      teamMembers = await User.countDocuments({ teamId: req.user.id });
+    }
 
     const totalLeads = await Lead.countDocuments();
 
-    const statusAggr = await Lead.aggregate([
-      { $group: { _id: "$status", count: { $sum: 1 } } }
-    ]);
+    const statusAggr = await Lead.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]);
     const byStatus = {};
     statusAggr.forEach(item => { byStatus[item._id || 'New'] = item.count; });
 
-   
-    const sourceAggr = await Lead.aggregate([
-      { $group: { _id: "$source", count: { $sum: 1 } } }
-    ]);
+    const sourceAggr = await Lead.aggregate([{ $group: { _id: "$source", count: { $sum: 1 } } }]);
     const bySource = {};
     sourceAggr.forEach(item => { bySource[item._id || 'Не указано'] = item.count; });
-
-  
-    let teamMembers = 0;
-if (req.user.role === 'admin') {
-  teamMembers = await User.countDocuments(); 
-} else if (req.user.role === 'team_lead') {
-  teamMembers = await User.countDocuments({ teamId: req.user.id }); 
-}
 
     res.json({
       totalLeads,
       byStatus,
       bySource,
       teamMembers,
-      statusList: leads.STATUS_LIST
+      statusList: leads.STATUS_LIST || ['New', 'In Progress', 'Closed']
     });
   } catch (e) {
     res.status(500).json({ message: 'Ошибка аналитики' });
