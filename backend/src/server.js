@@ -31,9 +31,9 @@ app.get('/me', auth.authMiddleware, async (req, res) => {
   res.json({ user: mapUser(user), team })
 })
 
-app.get('/leads', auth.authMiddleware, leads.getLeads())
-app.post('/leads', auth.authMiddleware, leads.createLead())
-app.post('/leads/:id/status', auth.authMiddleware, leads.updateStatus())
+//app.get('/leads', auth.authMiddleware, leads.getLeads())
+//app.post('/leads', auth.authMiddleware, leads.createLead())
+//app.post('/leads/:id/status', auth.authMiddleware, leads.updateStatus())
 app.put('/leads/:id', auth.authMiddleware, leads.updateLead())
 app.put('/leads/:id/deadline', auth.authMiddleware, leads.updateDeadline())
 app.delete('/leads/:id', auth.authMiddleware, leads.deleteLead())
