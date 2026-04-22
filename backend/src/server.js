@@ -4,7 +4,7 @@ const multer = require('multer')
 const fs = require('fs')
 const path = require('path')
 const sqlite3 = require('sqlite3').verbose()
-const { init, run, get, all } = require('./db')
+const connectDB = require('./db');
 const auth = require('./auth')
 const leads = require('./leads')
 
