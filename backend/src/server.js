@@ -4,7 +4,7 @@ const multer = require('multer');
 const connectDB = require('./db');
 const auth = require('./auth');
 const leads = require('./leads');
-const User = require('./models/User');
+const User = require('./User');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
