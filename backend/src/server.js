@@ -27,8 +27,7 @@ app.get('/me', auth.authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
-    
-    // ХИТРОСТЬ: Даем тимлиду его собственный ID в качестве teamId
+   
     const userTeamId = user.role === 'team_lead' ? user._id.toString() : (user.teamId || null);
     
     res.json({
@@ -43,12 +42,20 @@ app.get('/me', auth.authMiddleware, async (req, res) => {
 
 
 
+
 app.get('/team', auth.authMiddleware, async (req, res) => {
   try {
-    const targetTeamId = req.user.role === 'team_lead' ? req.user.id : req.user.teamId;
+
+    const currentUser = await User.findById(req.user.id);
+    if (!currentUser) return res.json({ team: null, members: [] });
+
+    const targetTeamId = currentUser.role === 'team_lead' ? currentUser._id.toString() : currentUser.teamId;
     if (!targetTeamId) return res.json({ team: null, members: [] });
 
-    
+
+    const leadUser = await User.findById(targetTeamId);
+    const actualTeamName = (leadUser && leadUser.teamName) ? leadUser.teamName : 'Моя команда';
+
     const members = await User.find({
       $or: [{ _id: targetTeamId }, { teamId: targetTeamId }]
     });
@@ -60,9 +67,9 @@ app.get('/team', auth.authMiddleware, async (req, res) => {
       teamId: u.teamId || targetTeamId
     }));
 
-    
+
     res.json({ 
-      team: { Id: targetTeamId, Name: 'Моя команда', LeadUserId: targetTeamId }, 
+      team: { Id: targetTeamId, Name: actualTeamName, LeadUserId: targetTeamId }, 
       members: mappedMembers 
     });
   } catch (e) {
@@ -70,6 +77,32 @@ app.get('/team', auth.authMiddleware, async (req, res) => {
   }
 });
 
+
+app.post('/team/upgrade-to-lead', auth.authMiddleware, async (req, res) => {
+  try {
+    const { teamName = '' } = req.body;
+    const currentUser = await User.findById(req.user.id);
+
+    if (currentUser.role !== 'user' && currentUser.role !== 'member') {
+      return res.status(400).json({ message: 'Вы уже лидер команды или админ' });
+    }
+    if (currentUser.teamId) {
+      return res.status(400).json({ message: 'Вы уже состоите в чужой команде' });
+    }
+
+
+    currentUser.role = 'team_lead';
+    currentUser.teamName = teamName.trim() || `Команда ${currentUser.email.split('@')[0]}`;
+    await currentUser.save();
+
+    res.json({
+      ok: true,
+      user: { id: currentUser._id, email: currentUser.email, role: currentUser.role, teamId: currentUser._id }
+    });
+  } catch (e) {
+    res.status(500).json({ message: 'Ошибка БД' });
+  }
+});
 
 app.post('/team/members', auth.authMiddleware, async (req, res) => {
   try {
