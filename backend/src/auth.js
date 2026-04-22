@@ -2,21 +2,22 @@ const jwt = require('jsonwebtoken');
 const User = require('./User'); 
 
 const SECRET = process.env.JWT_SECRET || 'tvoisecretkey';
-
 const register = () => async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { email, password, role, teamName } = req.body; 
     const normEmail = email.toLowerCase().trim();
     const existing = await User.findOne({ email: normEmail });
     if (existing) return res.status(409).json({ message: 'Email уже занят' });
 
     const newUser = new User({
       email: normEmail,
-      passwordHash: String(password), 
-      role: role === 'team_lead' ? 'team_lead' : 'user'
+      passwordHash: String(password),
+      role: role === 'team_lead' ? 'team_lead' : 'user',
+
+      teamName: role === 'team_lead' ? (teamName || 'Моя команда') : '' 
     });
     await newUser.save();
-
+    
     const token = jwt.sign({ id: newUser._id, role: newUser.role }, SECRET, { expiresIn: '24h' });
     res.json({ token, user: { id: newUser._id, email: newUser.email, role: newUser.role } });
   } catch (e) {
