@@ -6,7 +6,7 @@ const path = require('path')
 const sqlite3 = require('sqlite3').verbose()
 const { init, run, get, all } = require('./db')
 const auth = require('./auth')
-const leads = require('./Leads')
+const leads = require('./leads')
 
 const app = express()
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })
