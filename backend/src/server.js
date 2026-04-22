@@ -27,8 +27,8 @@ function mapUser(u) {
   };
 }
 
-app.post('/auth/register', auth.register);
-app.post('/auth/login', auth.login);
+app.post('/auth/register', auth.register());
+app.post('/auth/login', auth.login());
 
 app.get('/me', auth.authMiddleware, async (req, res) => {
   try {
