@@ -1,9 +1,9 @@
 const jwt = require('jsonwebtoken');
-const User = require('./models/User'); // Подключаем нашу модель
+const User = require('./models/User'); 
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret123';
 
-// Создаем токен (теперь используем _id из MongoDB)
+
 function issueToken(user) {
   return jwt.sign(
     { id: user._id, email: user.email, role: user.role, teamId: user.teamId || null },
@@ -12,7 +12,7 @@ function issueToken(user) {
   );
 }
 
-// Прослойка проверки авторизации (остается почти такой же)
+
 function authMiddleware(req, res, next) {
   const header = req.headers.authorization;
   if (!header) return res.status(401).json({ message: 'No token' });
@@ -25,7 +25,7 @@ function authMiddleware(req, res, next) {
   }
 }
 
-// Регистрация через MongoDB
+
 function register() {
   return async (req, res) => {
     const { email, password, role = 'user' } = req.body || {};
@@ -34,14 +34,14 @@ function register() {
     if (!normEmail || !password) return res.status(400).json({ message: 'Введите email и пароль' });
 
     try {
-      // Проверяем, есть ли такой юзер
+      
       const exists = await User.findOne({ email: normEmail });
       if (exists) return res.status(409).json({ message: 'Email уже зарегистрирован' });
 
-      // Создаем нового юзера
+     
       const newUser = new User({
         email: normEmail,
-        password: password, // В идеале тут нужен bcrypt, но пока оставляем как было у тебя
+        password: password, 
         role: role === 'team_lead' ? 'team_lead' : 'user'
       });
 
@@ -57,7 +57,7 @@ function register() {
   };
 }
 
-// Логин через MongoDB
+
 function login() {
   return async (req, res) => {
     const { email, password } = req.body || {};
@@ -66,10 +66,9 @@ function login() {
     if (!normEmail || !password) return res.status(400).json({ message: 'Введите email и пароль' });
 
     try {
-      // Ищем юзера в MongoDB
+     
       const user = await User.findOne({ email: normEmail });
       
-      // Проверяем пароль (простое сравнение строк, как в твоем старом коде)
       if (!user || user.password !== String(password)) {
         return res.status(401).json({ message: 'Неверные данные' });
       }
