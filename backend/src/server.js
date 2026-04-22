@@ -23,26 +23,24 @@ function mapUser(u) {
   }
 }
 
-app.post('/auth/register', auth.register())
-app.post('/auth/login', auth.login())
+app.post('/auth/register', auth.register)
+app.post('/auth/login', auth.login)
 app.get('/me', auth.authMiddleware, async (req, res) => {
   try {
+    const User = require('./models/User');
     const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    const team = null; 
-
-    res.json({ user: mapUser(user), team });
+    res.json({ user: mapUser(user), team: null });
   } catch (err) {
-    res.status(500).json({ message: 'Ошибка сервера' });
+    res.status(500).json({ message: 'Ошибка' });
   }
-})
+});
 
-app.get('/leads', auth.authMiddleware, leads.getLeads())
-app.post('/leads', auth.authMiddleware, leads.createLead())
-app.post('/leads/:id/status', auth.authMiddleware, leads.updateStatus())
-app.put('/leads/:id', auth.authMiddleware, leads.updateLead())
-app.put('/leads/:id/deadline', auth.authMiddleware, leads.updateDeadline())
-app.delete('/leads/:id', auth.authMiddleware, leads.deleteLead())
+app.get('/leads', auth.authMiddleware, leads.getLeads)
+app.post('/leads', auth.authMiddleware, leads.createLead)
+app.post('/leads/:id/status', auth.authMiddleware, leads.updateStatus)
+app.put('/leads/:id', auth.authMiddleware, leads.updateLead)
+app.put('/leads/:id/deadline', auth.authMiddleware, leads.updateDeadline)
+app.delete('/leads/:id', auth.authMiddleware, leads.deleteLead)
 
 app.get('/analytics', auth.authMiddleware, async (req, res) => {
   try {
