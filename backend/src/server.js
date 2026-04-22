@@ -35,11 +35,11 @@ app.get('/me', auth.authMiddleware, async (req, res) => {
   }
 });
 
-app.get('/leads', auth.authMiddleware, leads.getLeads);
-app.post('/leads', auth.authMiddleware, leads.createLead);
-app.post('/leads/:id/status', auth.authMiddleware, leads.updateStatus);
-app.put('/leads/:id', auth.authMiddleware, leads.updateLead);
-app.delete('/leads/:id', auth.authMiddleware, leads.deleteLead);
+app.get('/leads', auth.authMiddleware, (req, res) => leads.getLeads(req, res));
+app.post('/leads', auth.authMiddleware, (req, res) => leads.createLead(req, res));
+app.post('/leads/:id/status', auth.authMiddleware, (req, res) => leads.updateStatus(req, res));
+app.put('/leads/:id', auth.authMiddleware, (req, res) => leads.updateLead(req, res));
+app.delete('/leads/:id', auth.authMiddleware, (req, res) => leads.deleteLead(req, res));
 
 app.get('/analytics', auth.authMiddleware, async (req, res) => {
   try {
