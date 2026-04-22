@@ -44,7 +44,40 @@ app.delete('/leads/:id', auth.authMiddleware, leads.deleteLead);
 
 app.get('/team', auth.authMiddleware, async (req, res) => res.json({ team: null, members: [] }));
 app.get('/analytics', auth.authMiddleware, async (req, res) => {
-  res.json({ totalLeads: 0, byStatus: {}, bySource: {}, teamMembers: 0, statusList: ['New', 'In Progress', 'Closed'] });
+  try {
+    const mongoose = require('mongoose');
+    const Lead = mongoose.model('Lead'); 
+    const User = mongoose.model('User'); 
+
+
+    const totalLeads = await Lead.countDocuments();
+
+    const statusAggr = await Lead.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } }
+    ]);
+    const byStatus = {};
+    statusAggr.forEach(item => { byStatus[item._id || 'New'] = item.count; });
+
+   
+    const sourceAggr = await Lead.aggregate([
+      { $group: { _id: "$source", count: { $sum: 1 } } }
+    ]);
+    const bySource = {};
+    sourceAggr.forEach(item => { bySource[item._id || 'Не указано'] = item.count; });
+
+  
+    const teamMembers = await User.countDocuments();
+
+    res.json({
+      totalLeads,
+      byStatus,
+      bySource,
+      teamMembers,
+      statusList: leads.STATUS_LIST
+    });
+  } catch (e) {
+    res.status(500).json({ message: 'Ошибка аналитики' });
+  }
 });
 
 connectDB();
