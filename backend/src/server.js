@@ -18,16 +18,21 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// --- АВТОРИЗАЦИЯ ---
+
 app.post('/auth/register', auth.register());
 app.post('/auth/login', auth.login());
+
 
 app.get('/me', auth.authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
+    
+    // ХИТРОСТЬ: Даем тимлиду его собственный ID в качестве teamId
+    const userTeamId = user.role === 'team_lead' ? user._id.toString() : (user.teamId || null);
+    
     res.json({
-      user: { id: user._id, email: user.email, role: user.role, teamId: user.teamId || null },
+      user: { id: user._id.toString(), email: user.email, role: user.role, teamId: userTeamId },
       team: null
     });
   } catch (err) {
@@ -36,17 +41,14 @@ app.get('/me', auth.authMiddleware, async (req, res) => {
 });
 
 
-app.get('/leads', auth.authMiddleware, leads.getLeads);
-app.post('/leads', auth.authMiddleware, leads.createLead);
-app.post('/leads/:id/status', auth.authMiddleware, leads.updateStatus);
-app.put('/leads/:id', auth.authMiddleware, leads.updateLead);
-app.delete('/leads/:id', auth.authMiddleware, leads.deleteLead);
+
 
 app.get('/team', auth.authMiddleware, async (req, res) => {
   try {
     const targetTeamId = req.user.role === 'team_lead' ? req.user.id : req.user.teamId;
     if (!targetTeamId) return res.json({ team: null, members: [] });
 
+    
     const members = await User.find({
       $or: [{ _id: targetTeamId }, { teamId: targetTeamId }]
     });
@@ -55,10 +57,14 @@ app.get('/team', auth.authMiddleware, async (req, res) => {
       id: u._id.toString(),
       email: u.email,
       role: u.role,
-      teamId: u.teamId
+      teamId: u.teamId || targetTeamId
     }));
 
-    res.json({ team: { id: targetTeamId, name: 'Моя команда' }, members: mappedMembers });
+    
+    res.json({ 
+      team: { Id: targetTeamId, Name: 'Моя команда', LeadUserId: targetTeamId }, 
+      members: mappedMembers 
+    });
   } catch (e) {
     res.status(500).json({ message: 'Ошибка БД' });
   }
