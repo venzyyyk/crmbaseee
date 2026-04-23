@@ -18,6 +18,53 @@ import {
   apiUpdateDeadline
 } from './api.js'
 
+export default function App() {
+
+  const [token, setToken] = useState(null);
+  const [user, setUser] = useState(null);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [leads, setLeads] = useState([]);
+  const [selectedLeadIds, setSelectedLeadIds] = useState([]); 
+
+
+  const toggleLeadSelection = (id) => {
+    setSelectedLeadIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const onMassDelete = () => {
+
+    if (window.confirm(`Видалити обрані записи (${selectedLeadIds.length} шт.)?`)) {
+      (async () => {
+        try {
+          const response = await fetch('https://crmbaseee.onrender.com/leads/mass-delete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ ids: selectedLeadIds })
+          });
+          
+          if (response.ok) {
+            setSelectedLeadIds([]); 
+            await loadAll(); 
+          } else {
+            alert('Сервер повернув помилку');
+          }
+        } catch (err) {
+          alert('Помилка з\'єднання з сервером');
+        }
+      })();
+    }
+  };
+
+  function normalizePhone(value) {
+    return String(value || '').trim().replace(/[\s\-()]/g, '')
+  }
+
+
 const STATUS_LIST = ['New', 'Contacted', 'Briefing', 'Proposal', 'Won', 'Lost']
 
 const STATUS_COLORS = {
@@ -95,37 +142,7 @@ const UI = {
   }
 }
 
-const [selectedLeadIds, setSelectedLeadIds] = useState([]);
 
-const toggleLeadSelection = (id) => {
-  setSelectedLeadIds(prev => 
-    prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-  );
-};
-function normalizePhone(value) {
-  return String(value || '').trim().replace(/[\s\-()]/g, '')
-}
-const onMassDelete = () => {
-  showConfirm(`Видалити обрані записи (${selectedLeadIds.length} шт.)?`, async () => {
-    try {
-      const response = await fetch('https://crmbaseee.onrender.com/leads/mass-delete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ ids: selectedLeadIds })
-      });
-      
-      if (response.ok) {
-        setSelectedLeadIds([]); 
-        await loadAll(); 
-      }
-    } catch (err) {
-      alert('Помилка видалення');
-    }
-  });
-};
 
 //func
 function isValidPhone(value) {
