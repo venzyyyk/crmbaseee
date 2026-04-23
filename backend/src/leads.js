@@ -157,4 +157,37 @@ const importLeads = async (req, res) => {
   }
 };
 
-module.exports = { getLeads, createLead, updateStatus, updateLead, deleteLead, importLeads, STATUS_LIST };
+const massDeleteLeads = async (req, res) => {
+    try {
+        const { ids } = req.body; 
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ message: 'Ничего не выбрано' });
+        }
+
+        const currentUser = await User.findById(req.user.id);
+        let query = { _id: { $in: ids } };
+
+
+        if (currentUser.role !== 'admin') {
+            const targetTeamId = currentUser.role === 'team_lead' ? currentUser._id.toString() : currentUser.teamId;
+            query.teamId = targetTeamId;
+        }
+
+        const result = await Lead.deleteMany(query);
+        res.json({ ok: true, deletedCount: result.deletedCount });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Ошибка при массовом удалении' });
+    }
+};
+
+
+module.exports = {
+    getLeads,
+    createLead,
+    updateStatus,
+    updateLead,
+    deleteLead,
+    importLeads,
+    massDeleteLeads 
+};
