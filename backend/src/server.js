@@ -91,6 +91,13 @@ app.post('/team/upgrade-to-lead', auth.authMiddleware, async (req, res) => {
     currentUser.teamName = teamName.trim() || `Команда ${currentUser.email.split('@')[0]}`;
     await currentUser.save();
 
+ 
+    const Lead = mongoose.model('Lead');
+    await Lead.updateMany(
+        { ownerId: currentUser._id, teamId: null }, 
+        { teamId: currentUser._id.toString() }
+    );
+
     res.json({
       ok: true,
       user: { id: currentUser._id, email: currentUser.email, role: currentUser.role, teamId: currentUser._id }
