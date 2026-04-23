@@ -1,12 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
-const mongoose = require('mongoose'); 
+const mongoose = require('mongoose');
 const connectDB = require('./db');
 const auth = require('./auth');
 const leads = require('./leads');
 const User = require('./User'); 
-
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
@@ -18,18 +17,15 @@ app.use(cors({
 }));
 app.use(express.json());
 
-
+// --- АВТОРИЗАЦИЯ ---
 app.post('/auth/register', auth.register());
 app.post('/auth/login', auth.login());
-
 
 app.get('/me', auth.authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
-   
     const userTeamId = user.role === 'team_lead' ? user._id.toString() : (user.teamId || null);
-    
     res.json({
       user: { id: user._id.toString(), email: user.email, role: user.role, teamId: userTeamId },
       team: null
@@ -40,18 +36,20 @@ app.get('/me', auth.authMiddleware, async (req, res) => {
 });
 
 
-
+app.get('/leads', auth.authMiddleware, leads.getLeads);
+app.post('/leads', auth.authMiddleware, leads.createLead);
+app.post('/leads/:id/status', auth.authMiddleware, leads.updateStatus);
+app.put('/leads/:id', auth.authMiddleware, leads.updateLead);
+app.delete('/leads/:id', auth.authMiddleware, leads.deleteLead);
 
 
 app.get('/team', auth.authMiddleware, async (req, res) => {
   try {
-
     const currentUser = await User.findById(req.user.id);
     if (!currentUser) return res.json({ team: null, members: [] });
 
     const targetTeamId = currentUser.role === 'team_lead' ? currentUser._id.toString() : currentUser.teamId;
     if (!targetTeamId) return res.json({ team: null, members: [] });
-
 
     const leadUser = await User.findById(targetTeamId);
     const actualTeamName = (leadUser && leadUser.teamName) ? leadUser.teamName : 'Моя команда';
@@ -67,7 +65,6 @@ app.get('/team', auth.authMiddleware, async (req, res) => {
       teamId: u.teamId || targetTeamId
     }));
 
-
     res.json({ 
       team: { Id: targetTeamId, Name: actualTeamName, LeadUserId: targetTeamId }, 
       members: mappedMembers 
@@ -76,7 +73,6 @@ app.get('/team', auth.authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Ошибка БД' });
   }
 });
-
 
 app.post('/team/upgrade-to-lead', auth.authMiddleware, async (req, res) => {
   try {
@@ -89,7 +85,6 @@ app.post('/team/upgrade-to-lead', auth.authMiddleware, async (req, res) => {
     if (currentUser.teamId) {
       return res.status(400).json({ message: 'Вы уже состоите в чужой команде' });
     }
-
 
     currentUser.role = 'team_lead';
     currentUser.teamName = teamName.trim() || `Команда ${currentUser.email.split('@')[0]}`;
@@ -137,21 +132,36 @@ app.post('/team/members', auth.authMiddleware, async (req, res) => {
 app.get('/analytics', auth.authMiddleware, async (req, res) => {
   try {
     const Lead = mongoose.model('Lead'); 
-    
+    const targetTeamId = req.user.role === 'team_lead' ? req.user.id : req.user.teamId;
+   
     let teamMembers = 0;
     if (req.user.role === 'admin') {
       teamMembers = await User.countDocuments();
-    } else if (req.user.role === 'team_lead') {
-      teamMembers = await User.countDocuments({ teamId: req.user.id });
+    } else if (targetTeamId) {
+      teamMembers = await User.countDocuments({
+        $or: [{ _id: targetTeamId }, { teamId: targetTeamId }]
+      });
     }
 
-    const totalLeads = await Lead.countDocuments();
+  
+    let leadQuery = {};
+    if (req.user.role !== 'admin' && targetTeamId) {
+      leadQuery = { teamId: targetTeamId };
+    }
 
-    const statusAggr = await Lead.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]);
+    const totalLeads = await Lead.countDocuments(leadQuery);
+
+    const statusAggr = await Lead.aggregate([
+      { $match: leadQuery },
+      { $group: { _id: "$status", count: { $sum: 1 } } }
+    ]);
     const byStatus = {};
     statusAggr.forEach(item => { byStatus[item._id || 'New'] = item.count; });
 
-    const sourceAggr = await Lead.aggregate([{ $group: { _id: "$source", count: { $sum: 1 } } }]);
+    const sourceAggr = await Lead.aggregate([
+      { $match: leadQuery },
+      { $group: { _id: "$source", count: { $sum: 1 } } }
+    ]);
     const bySource = {};
     sourceAggr.forEach(item => { bySource[item._id || 'Не указано'] = item.count; });
 
