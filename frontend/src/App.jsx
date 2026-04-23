@@ -541,9 +541,10 @@ async function onBaseFileChosen(event) {
     )
   }
 
-  function renderCrm() {
+function renderCrm() {
     return (
       <div>
+
         <form onSubmit={(event) => event.preventDefault()} style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
             <option value="all">{t.allStatuses}</option>
@@ -552,6 +553,7 @@ async function onBaseFileChosen(event) {
             ))}
           </select>
         </form>
+
 
         <form id="lead-form" onSubmit={onAddLead}>
           <input name="name" placeholder={t.leadName} required value={leadForm.name} onChange={(event) => setLeadForm((prev) => ({ ...prev, name: event.target.value }))} />
@@ -563,6 +565,30 @@ async function onBaseFileChosen(event) {
           <button type="submit">{t.addLead}</button>
         </form>
 
+
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '15px', marginTop: '10px' }}>
+          <button 
+            type="button"
+            onClick={() => {
+              if (selectedLeadIds.length === filteredLeads.length) setSelectedLeadIds([]);
+              else setSelectedLeadIds(filteredLeads.map(l => l.id));
+            }}
+            style={{ flex: 1, backgroundColor: '#333', fontSize: '14px' }}
+          >
+            {selectedLeadIds.length === filteredLeads.length ? '❌ Зняти виділення' : '✅ Вибрати всіх'}
+          </button>
+
+          {selectedLeadIds.length > 0 && (
+            <button 
+              type="button" 
+              onClick={onMassDelete}
+              style={{ flex: 1, backgroundColor: '#ef4444', fontWeight: 'bold' }}
+            >
+              🗑 Видалити ({selectedLeadIds.length})
+            </button>
+          )}
+        </div>
+
         <div id="leads-container">
           {filteredLeads.map((lead) => (
             <div
@@ -572,11 +598,20 @@ async function onBaseFileChosen(event) {
                 borderBottom: '1px solid #2b2b2b',
                 paddingBottom: '12px',
                 display: 'grid',
-                gridTemplateColumns: 'minmax(220px, 260px) minmax(0, 1fr)',
+                gridTemplateColumns: '40px minmax(220px, 260px) minmax(0, 1fr)', 
                 gap: '12px',
                 alignItems: 'start'
               }}
             >
+              <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                <input 
+                  type="checkbox"
+                  checked={selectedLeadIds.includes(lead.id)}
+                  onChange={() => toggleLeadSelection(lead.id)}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                />
+              </div>
+
               <div>
                 <span
                   style={{ textDecoration: 'underline', cursor: 'pointer', display: 'block', maxWidth: '100%', lineHeight: '1.35', wordBreak: 'normal', overflowWrap: 'anywhere' }}
@@ -594,7 +629,6 @@ async function onBaseFileChosen(event) {
       </div>
     )
   }
-
   function renderAnalytics() {
     return (
       <div>
