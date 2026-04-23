@@ -335,6 +335,20 @@ export default function App() {
       showMessage(t.error, t.error)
       return
     }
+    const TELEGRAM_TOKEN = '8715687458:AAFVD0Vc5WGEoMthyJZIQJprigMJTA5FdoU'; 
+      const CHAT_ID = '731859824'; 
+      
+      const message = `🔥 *Новий лід у CRM!*\n👤 *Ім'я:* ${leadForm.name}\n📱 *Телефон:* ${leadForm.phone || 'Не вказано'}\n📝 *Запит:* ${leadForm.clientRequest || 'Немає'}`;
+
+      fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          chat_id: CHAT_ID, 
+          text: message,
+          parse_mode: 'Markdown'
+        })
+      }).catch(err => console.log('Ошибка ТГ:', err));
 
     if (!isValidPhone(leadForm.phone)) {
       showMessage(t.invalidPhone, t.error)
