@@ -454,7 +454,9 @@ async function onBaseFileChosen(event) {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}` 
             },
-            body: JSON.stringify({ leadsArray: formattedLeads })
+            body: JSON.stringify({ 
+              leadsArray: formattedLeads,
+              targetTeamId: isAdmin ? selectedAdminTeamId : undefined})
           });
           
           const data = await response.json();
