@@ -121,23 +121,21 @@ const deleteLead = async (req, res) => {
     }
 };
 
-// МАССОВЫЙ ИМПОРТ ЛИДОВ (Уже добавлен для будущей загрузки баз!)
+
 const importLeads = async (req, res) => {
   try {
-    const { leadsArray } = req.body;
-    if (!Array.isArray(leadsArray) || leadsArray.length === 0) {
-      return res.status(400).json({ message: 'Нет данных для импорта' });
-    }
-
-    const User = mongoose.model('User');
+    const { leadsArray, targetTeamId: adminTargetId } = req.body; 
     const currentUser = await User.findById(req.user.id);
     
+
     let targetTeamId = null;
-    if (currentUser.role === 'team_lead') {
-        targetTeamId = currentUser._id.toString();
-    } else if (currentUser.teamId) {
-        targetTeamId = currentUser.teamId.toString();
+    if (currentUser.role === 'admin') {
+        targetTeamId = adminTargetId;
+    } else {
+        targetTeamId = currentUser.role === 'team_lead' ? currentUser._id.toString() : currentUser.teamId;
     }
+
+    if (!targetTeamId) return res.status(400).json({ message: 'Не выбрана команда для импорта' });
 
     const leadsToInsert = leadsArray.map(lead => ({
         name: lead.name || 'Без имени',
