@@ -528,9 +528,13 @@ function renderCrm() {
         </select>
       </div>
 
-      <form id="lead-form" onSubmit={onAddLead}>
+      <form id="lead-form" onSubmit={onAddLead} style={{ marginBottom: '20px' }}>
         <input name="name" placeholder={t.leadName} required value={leadForm.name} onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })} />
         <input name="phone" placeholder={t.phone} value={leadForm.phone} onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value })} />
+        <input type="email" name="email" placeholder={t.emailField} value={leadForm.email} onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })} />
+        <input name="socials" placeholder={t.socials} value={leadForm.socials} onChange={(e) => setLeadForm({ ...leadForm, socials: e.target.value })} />
+        <input name="source" placeholder={t.source} value={leadForm.source} onChange={(e) => setLeadForm({ ...leadForm, source: e.target.value })} />
+        <input name="clientRequest" placeholder={t.clientRequest} value={leadForm.clientRequest} onChange={(e) => setLeadForm({ ...leadForm, clientRequest: e.target.value })} />
         <button type="submit">{t.addLead}</button>
       </form>
 
