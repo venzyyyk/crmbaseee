@@ -3,9 +3,22 @@ body {
     margin: 0;
     padding: 0;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #121212;
-    color: #e0e0e0;
+    background: linear-gradient(-45deg, #101010, #0a1f0a, #101010, #0f2d1e);
+    background-size: 400% 400%; 
+    animation: backgroundGradient 15s ease infinite; 
+    height: 100vh; 
+    overflow: auto; 
 }
+@keyframes backgroundGradient {
+  0% {
+    background-position: 0% 50%; /* Начинаем с одной стороны */
+  }
+  50% {
+    background-position: 100% 50%; /* Плавно переходим на другую */
+  }
+  100% {
+    background-position: 0% 50%; /* Возвращаемся */
+  }
 
 h2, h3 {
     margin: 0 0 15px 0;
