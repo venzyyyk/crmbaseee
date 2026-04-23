@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import Papa from 'papaparse';
 import Modal from './components/Modal.jsx'
 import {
   apiRegister,
@@ -49,7 +50,7 @@ const UI = {
     members: 'Учасники', addMember: 'Додати учасника', addTeamLead: 'Додати лідера команди',
     teams: 'Команди', createOwnTeam: 'Створити свою команду', createOwnTeamText: 'Якщо хочеш створити свою команду, введи назву та натисни кнопку нижче.',
     becomeLead: 'Стати лідером команди',
-    uploadBase: 'Завантажити базу (.sqlite)', uploadBaseTeam: 'Завантажити базу для моєї команди (.sqlite)',
+    uploadBase: 'Завантажити базу (.csv)', uploadBaseTeam: 'Завантажити базу для моєї команди (.csv)',
     selectTeam: 'Обери команду', replaceBase: 'Нова база замінить старі записи вибраної команди.',
     leadInfo: 'Інформація про запис', deleteLead: 'Видалити запис',
     name: 'назва', phoneLower: 'номер', emailLower: 'email', socialsLower: 'соцмережі', sourceLower: 'джерело',
@@ -78,7 +79,7 @@ const UI = {
     members: 'Members', addMember: 'Add member', addTeamLead: 'Add team leader',
     teams: 'Teams', createOwnTeam: 'Create your own team', createOwnTeamText: 'Enter a team name and use the button below.',
     becomeLead: 'Become team leader',
-    uploadBase: 'Upload base (.sqlite)', uploadBaseTeam: 'Upload base for my team (.sqlite)',
+    uploadBase: 'Upload base (.csv)', uploadBaseTeam: 'Upload base for my team (.csv)',
     selectTeam: 'Select team', replaceBase: 'The new base will replace old entries for the selected team.',
     leadInfo: 'Entry details', deleteLead: 'Delete entry',
     name: 'title', phoneLower: 'phone', emailLower: 'email', socialsLower: 'socials', sourceLower: 'source',
