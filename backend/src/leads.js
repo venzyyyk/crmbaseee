@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-
 const STATUS_LIST = ['New', 'In Progress', 'Closed', 'Успішно', 'Втрачено'];
 
 const LeadSchema = new mongoose.Schema({
@@ -13,7 +12,7 @@ const LeadSchema = new mongoose.Schema({
   clientRequest: { type: String, default: '' },
   deadline: { type: Date, default: null },
   ownerId: { type: String, default: null },
-  teamId: { type: String, default: null },
+  teamId: { type: String, default: null }, 
   assignedToUserId: { type: String, default: null },
   createdAt: { type: Date, default: Date.now }
 });
@@ -22,7 +21,16 @@ const Lead = mongoose.models.Lead || mongoose.model('Lead', LeadSchema);
 
 const getLeads = async (req, res) => {
   try {
-    const data = await Lead.find({});
+    const targetTeamId = req.user.role === 'team_lead' ? req.user.id : req.user.teamId;
+    
+  
+    let query = {};
+    if (req.user.role !== 'admin') {
+       if (!targetTeamId) return res.json([]); 
+       query = { teamId: targetTeamId };
+    }
+
+    const data = await Lead.find(query);
     const mapped = data.map(lead => {
       const obj = lead.toObject();
       obj.id = obj._id.toString(); 
@@ -36,8 +44,15 @@ const getLeads = async (req, res) => {
 
 const createLead = async (req, res) => {
   try {
-    const newLead = new Lead(req.body);
+    const targetTeamId = req.user.role === 'team_lead' ? req.user.id : req.user.teamId;
+
+    const newLead = new Lead({
+        ...req.body,
+        ownerId: req.user.id,
+        teamId: targetTeamId 
+    });
     await newLead.save();
+    
     const obj = newLead.toObject();
     obj.id = obj._id.toString(); 
     res.json(obj);
@@ -56,7 +71,6 @@ const updateStatus = async (req, res) => {
     res.status(500).json({ message: e.message });
   }
 };
-
 
 const updateLead = async (req, res) => {
   try {
