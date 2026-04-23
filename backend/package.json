@@ -15,5 +15,6 @@
     "mongoose": "^8.3.2",
     "multer": "^1.4.5-lts.1",
     "sqlite3": "^5.1.7"
+    "papaparse": "^5.4.1"
   }
 }
