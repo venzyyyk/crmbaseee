@@ -17,13 +17,7 @@ import {
   apiAddTeamLead,
   apiUpdateDeadline
 } from './api.js'
-export default function App() {
-  const [selectedLeadIds, setSelectedLeadIds] = useState([]);
-  const [showPassword, setShowPassword] = useState(false);
 
-  const toggleLeadSelection = (id) => {
-
-  };
 
 
 const STATUS_LIST = ['New', 'Contacted', 'Briefing', 'Proposal', 'Won', 'Lost']
@@ -228,7 +222,8 @@ export default function App() {
   const [modalTitle, setModalTitle] = useState('')
   const [modalBody, setModalBody] = useState(null)
   const [selectedLeadId, setSelectedLeadId] = useState(null)
-
+  const [selectedLeadIds, setSelectedLeadIds] = useState([]);
+  const [showPassword, setShowPassword] = useState(false);
   const fileInputRef = useRef(null)
 
   const t = UI[lang]
@@ -242,6 +237,10 @@ export default function App() {
     return leads.find((lead) => String(lead.id) === String(selectedLeadId)) || null
   }, [leads, selectedLeadId])
 
+  const toggleLeadSelection = (id) => {
+
+  };
+  
   const filteredLeads = useMemo(() => {
     if (statusFilter === 'all') return leads
     return leads.filter((lead) => lead.status === statusFilter)
