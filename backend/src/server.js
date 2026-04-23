@@ -152,16 +152,21 @@ app.get('/analytics', auth.authMiddleware, async (req, res) => {
     let teamMembers = 0;
     let leadQuery = {};
 
-    if (currentUser.role === 'admin') {
+   if (currentUser.role === 'admin') {
       teamMembers = await User.countDocuments();
     } else if (targetTeamId) {
-      // Человек в команде
+
       teamMembers = await User.countDocuments({
         $or: [{ _id: targetTeamId }, { teamId: targetTeamId }]
       });
-      leadQuery = { teamId: targetTeamId };
+      leadQuery = { 
+        $or: [
+          { teamId: targetTeamId }, 
+          { ownerId: req.user.id, teamId: null } 
+        ] 
+      };
     } else {
-      // ОДИНОЧКА
+
       teamMembers = 1; 
       leadQuery = { ownerId: req.user.id };
     }
