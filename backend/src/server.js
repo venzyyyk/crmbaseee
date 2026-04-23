@@ -48,28 +48,28 @@ app.delete('/leads/:id', auth.authMiddleware, leads.deleteLead);
 app.get('/team', auth.authMiddleware, async (req, res) => {
   try {
     const currentUser = await User.findById(req.user.id);
-    if (!currentUser) return res.json({ team: null, members: [] });
+    if (!currentUser) return res.json({ team: null, members: [], teams: [] });
+    
+    if (currentUser.role === 'admin') {
+      const allLeads = await User.find({ role: 'team_lead' });
+      const teams = allLeads.map(u => ({
+        Id: u._id.toString(),
+        Name: u.teamName || `Команда ${u.email.split('@')[0]}`,
+        LeadEmail: u.email
+      }));
+      return res.json({ team: null, members: [], teams: teams });
+    }
 
     const targetTeamId = currentUser.role === 'team_lead' ? currentUser._id.toString() : currentUser.teamId;
-    if (!targetTeamId) return res.json({ team: null, members: [] });
+    if (!targetTeamId) return res.json({ team: null, members: [], teams: [] });
 
     const leadUser = await User.findById(targetTeamId);
-    const actualTeamName = (leadUser && leadUser.teamName) ? leadUser.teamName : 'Моя команда';
-
-    const members = await User.find({
-      $or: [{ _id: targetTeamId }, { teamId: targetTeamId }]
-    });
-
-    const mappedMembers = members.map(u => ({
-      id: u._id.toString(),
-      email: u.email,
-      role: u.role,
-      teamId: u.teamId || targetTeamId
-    }));
+    const members = await User.find({ $or: [{ _id: targetTeamId }, { teamId: targetTeamId }] });
 
     res.json({ 
-      team: { Id: targetTeamId, Name: actualTeamName, LeadUserId: targetTeamId }, 
-      members: mappedMembers 
+      team: { Id: targetTeamId, Name: leadUser?.teamName || 'Моя команда' }, 
+      members: members.map(u => ({ id: u._id, email: u.email, role: u.role })),
+      teams: [] 
     });
   } catch (e) {
     res.status(500).json({ message: 'Ошибка БД' });
