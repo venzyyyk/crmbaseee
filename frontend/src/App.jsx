@@ -590,22 +590,18 @@ function renderCrm() {
               if (selectedLeadIds.length === filteredLeads.length) setSelectedLeadIds([]);
               else setSelectedLeadIds(filteredLeads.map(l => l.id));
             }}
-            style={{ flex: 1, backgroundColor: '#333', fontSize: '14px' }}
+            style={{ flex: 1, backgroundColor: '#333', fontSize: '14px', border: '1px solid #444' }}
           >
             {selectedLeadIds.length === filteredLeads.length ? '❌ Зняти виділення' : '✅ Вибрати всіх'}
           </button>
 
           {selectedLeadIds.length > 0 && (
-            <button 
-              type="button" 
-              onClick={onMassDelete}
-              style={{ flex: 1, backgroundColor: '#ef4444', fontWeight: 'bold' }}
-            >
+            <button type="button" onClick={onMassDelete} style={{ flex: 1, backgroundColor: '#ef4444', fontWeight: 'bold' }}>
               🗑 Видалити ({selectedLeadIds.length})
             </button>
           )}
         </div>
-
+        
         <div id="leads-container">
           {filteredLeads.map((lead) => (
             <div
