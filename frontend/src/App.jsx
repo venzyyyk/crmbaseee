@@ -328,62 +328,92 @@ export default function App() {
     }
   }
 
-  async function onAddLead(event) {
+async function onAddLead(event) {
+
     event.preventDefault()
 
+
+
     if (!leadForm.name.trim()) {
+
       showMessage(t.error, t.error)
+
       return
+
     }
 
-    // СНАЧАЛА проверяем телефон
+
     if (!isValidPhone(leadForm.phone)) {
+
       showMessage(t.invalidPhone, t.error)
+
       return
+
     }
 
-    // Собираем данные
+
+
     const payload = {
+
       name: leadForm.name,
+
       phone: normalizePhone(leadForm.phone),
+
       email: leadForm.email,
+
       socials: leadForm.socials,
+
       source: leadForm.source,
+
       clientRequest: leadForm.clientRequest
+
     }
 
-    // ОТПРАВЛЯЕМ В БАЗУ
+
+
     const result = await apiCreateLead(token, payload)
+
     if (!result.ok) {
+
       showMessage(result.data?.message || t.error, t.error)
+
       return
+
     }
 
-    // ==========================================
-    // 🔥 МАГИЯ TELEGRAM (ОТПРАВЛЯЕМ ТОЛЬКО ЕСЛИ БД СОХРАНИЛА) 🔥
-    // ==========================================
-    const TELEGRAM_TOKEN = '8715687458:AAFVD0Vc5WGEoMthyJZIQJprigMJTA5FdoU'; 
-    const CHAT_ID = '731859824'; 
-    
-    const message = `🔥 *Новий лід у CRM!*\n👤 *Ім'я:* ${leadForm.name}\n📱 *Телефон:* ${leadForm.phone || 'Не вказано'}\n📝 *Запит:* ${leadForm.clientRequest || 'Немає'}`;
+      const TELEGRAM_TOKEN = '8715687458:AAFVD0Vc5WGEoMthyJZIQJprigMJTA5FdoU'; 
 
-    fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        chat_id: CHAT_ID, 
-        text: message,
-        parse_mode: 'Markdown'
-      })
-    }).catch(err => console.log('Ошибка ТГ:', err));
-    // ==========================================
+      const CHAT_ID = '731859824'; 
+      const message = `🔥 *Новий лід у CRM!*\n👤 *Ім'я:* ${leadForm.name}\n📱 *Телефон:* ${leadForm.phone || 'Не вказано'}\n📝 *Запит:* ${leadForm.clientRequest || 'Немає'}`;
 
-    // Очищаем форму и обновляем список на экране
-    // Заменил на твой способ или просто setLeadForm({name: '', phone: '', ...})
-    setLeadForm(typeof EMPTY_LEAD_FORM !== 'undefined' ? EMPTY_LEAD_FORM : { name: '', phone: '', email: '', socials: '', source: '', clientRequest: '' });
+
+
+      fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+
+        method: 'POST',
+
+        headers: { 'Content-Type': 'application/json' },
+
+        body: JSON.stringify({ 
+
+          chat_id: CHAT_ID, 
+
+          text: message,
+
+          parse_mode: 'Markdown'
+
+        })
+
+      }).catch(err => console.log('Ошибка ТГ:', err));
+
+
+    setLeadForm(EMPTY_LEAD_FORM)
+
     await loadAll()
+
   }
 
+  
   async function onAddMember(event) {
     event.preventDefault()
 
