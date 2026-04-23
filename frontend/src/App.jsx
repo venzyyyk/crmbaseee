@@ -335,8 +335,14 @@ export default function App() {
       showMessage(t.error, t.error)
       return
     }
-    
 
+    // СНАЧАЛА проверяем телефон
+    if (!isValidPhone(leadForm.phone)) {
+      showMessage(t.invalidPhone, t.error)
+      return
+    }
+
+    // Собираем данные
     const payload = {
       name: leadForm.name,
       phone: normalizePhone(leadForm.phone),
@@ -346,56 +352,36 @@ export default function App() {
       clientRequest: leadForm.clientRequest
     }
 
+    // ОТПРАВЛЯЕМ В БАЗУ
     const result = await apiCreateLead(token, payload)
     if (!result.ok) {
       showMessage(result.data?.message || t.error, t.error)
       return
     }
 
-    setLeadForm(EMPTY_LEAD_FORM)
+    // ==========================================
+    // 🔥 МАГИЯ TELEGRAM (ОТПРАВЛЯЕМ ТОЛЬКО ЕСЛИ БД СОХРАНИЛА) 🔥
+    // ==========================================
+    const TELEGRAM_TOKEN = '8715687458:AAFVD0Vc5WGEoMthyJZIQJprigMJTA5FdoU'; 
+    const CHAT_ID = '731859824'; 
+    
+    const message = `🔥 *Новий лід у CRM!*\n👤 *Ім'я:* ${leadForm.name}\n📱 *Телефон:* ${leadForm.phone || 'Не вказано'}\n📝 *Запит:* ${leadForm.clientRequest || 'Немає'}`;
+
+    fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        chat_id: CHAT_ID, 
+        text: message,
+        parse_mode: 'Markdown'
+      })
+    }).catch(err => console.log('Ошибка ТГ:', err));
+    // ==========================================
+
+    // Очищаем форму и обновляем список на экране
+    // Заменил на твой способ или просто setLeadForm({name: '', phone: '', ...})
+    setLeadForm(typeof EMPTY_LEAD_FORM !== 'undefined' ? EMPTY_LEAD_FORM : { name: '', phone: '', email: '', socials: '', source: '', clientRequest: '' });
     await loadAll()
-  }
-
-  async function onSetStatus(id, status) {
-    const result = await apiSetStatus(token, id, status)
-    if (!result.ok) {
-      showMessage(result.data?.message || t.error, t.error)
-      return
-    }
-
-    await loadAll()
-  }
-  const TELEGRAM_TOKEN = '8715687458:AAFVD0Vc5WGEoMthyJZIQJprigMJTA5FdoU'; 
-      const CHAT_ID = '731859824'; 
-      
-      const message = `🔥 *Новий лід у CRM!*\n👤 *Ім'я:* ${leadForm.name}\n📱 *Телефон:* ${leadForm.phone || 'Не вказано'}\n📝 *Запит:* ${leadForm.clientRequest || 'Немає'}`;
-
-      fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          chat_id: CHAT_ID, 
-          text: message,
-          parse_mode: 'Markdown'
-        })
-      }).catch(err => console.log('Ошибка ТГ:', err));
-
-    if (!isValidPhone(leadForm.phone)) {
-      showMessage(t.invalidPhone, t.error)
-      return
-    }
-
-  function onDeleteLead(id) {
-    showConfirm(t.deleteConfirm, async () => {
-      const result = await apiDeleteLead(token, id)
-      if (!result.ok) {
-        showMessage(result.data?.message || t.error, t.error)
-        return
-      }
-
-      setModalOpen(false)
-      await loadAll()
-    })
   }
 
   async function onAddMember(event) {
