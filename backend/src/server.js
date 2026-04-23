@@ -139,21 +139,49 @@ app.get('/analytics', auth.authMiddleware, async (req, res) => {
     const targetTeamId = currentUser.role === 'team_lead' ? currentUser._id.toString() : currentUser.teamId;
     
     let teamMembers = 0;
+    let leadQuery = {};
+
     if (currentUser.role === 'admin') {
       teamMembers = await User.countDocuments();
     } else if (targetTeamId) {
+
       teamMembers = await User.countDocuments({
         $or: [{ _id: targetTeamId }, { teamId: targetTeamId }]
       });
-    }
-
-    let leadQuery = {};
-    if (currentUser.role !== 'admin') {
-
-      if (!targetTeamId) return res.json({ totalLeads: 0, byStatus: {}, bySource: {}, teamMembers: 0, statusList: leads.STATUS_LIST });
       leadQuery = { teamId: targetTeamId };
+    } else {
+
+      teamMembers = 1; 
+      leadQuery = { ownerId: req.user.id };
     }
 
+    const totalLeads = await Lead.countDocuments(leadQuery);
+
+    const statusAggr = await Lead.aggregate([
+      { $match: leadQuery },
+      { $group: { _id: "$status", count: { $sum: 1 } } }
+    ]);
+    const byStatus = {};
+    statusAggr.forEach(item => { byStatus[item._id || 'New'] = item.count; });
+
+    const sourceAggr = await Lead.aggregate([
+      { $match: leadQuery },
+      { $group: { _id: "$source", count: { $sum: 1 } } }
+    ]);
+    const bySource = {};
+    sourceAggr.forEach(item => { bySource[item._id || 'Не указано'] = item.count; });
+
+    res.json({
+      totalLeads,
+      byStatus,
+      bySource,
+      teamMembers,
+      statusList: leads.STATUS_LIST || ['New', 'In Progress', 'Closed']
+    });
+  } catch (e) {
+    res.status(500).json({ message: 'Ошибка аналитики' });
+  }
+});
     const totalLeads = await Lead.countDocuments(leadQuery);
 
     const statusAggr = await Lead.aggregate([
