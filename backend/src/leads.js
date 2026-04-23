@@ -26,12 +26,19 @@ const getLeads = async (req, res) => {
     const currentUser = await User.findById(req.user.id);
     if (!currentUser) return res.json([]);
 
-    const targetTeamId = currentUser.role === 'team_lead' ? currentUser._id.toString() : currentUser.teamId;
-
     let query = {};
+    
+
     if (currentUser.role !== 'admin') {
-       if (!targetTeamId) return res.json([]); 
-       query = { teamId: targetTeamId }; 
+       const targetTeamId = currentUser.role === 'team_lead' ? currentUser._id.toString() : currentUser.teamId;
+       
+       if (targetTeamId) {
+        
+           query = { teamId: targetTeamId };
+       } else {
+
+           query = { ownerId: req.user.id };
+       }
     }
 
     const data = await Lead.find(query);
