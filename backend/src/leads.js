@@ -12,22 +12,26 @@ const LeadSchema = new mongoose.Schema({
   clientRequest: { type: String, default: '' },
   deadline: { type: Date, default: null },
   ownerId: { type: String, default: null },
-  teamId: { type: String, default: null }, 
+  teamId: { type: String, default: null },
   assignedToUserId: { type: String, default: null },
   createdAt: { type: Date, default: Date.now }
 });
 
 const Lead = mongoose.models.Lead || mongoose.model('Lead', LeadSchema);
 
+
 const getLeads = async (req, res) => {
   try {
-    const targetTeamId = req.user.role === 'team_lead' ? req.user.id : req.user.teamId;
-    
-  
+    const User = mongoose.model('User');
+    const currentUser = await User.findById(req.user.id);
+    if (!currentUser) return res.json([]);
+
+    const targetTeamId = currentUser.role === 'team_lead' ? currentUser._id.toString() : currentUser.teamId;
+
     let query = {};
-    if (req.user.role !== 'admin') {
+    if (currentUser.role !== 'admin') {
        if (!targetTeamId) return res.json([]); 
-       query = { teamId: targetTeamId };
+       query = { teamId: targetTeamId }; 
     }
 
     const data = await Lead.find(query);
@@ -44,12 +48,14 @@ const getLeads = async (req, res) => {
 
 const createLead = async (req, res) => {
   try {
-    const targetTeamId = req.user.role === 'team_lead' ? req.user.id : req.user.teamId;
+    const User = mongoose.model('User');
+    const currentUser = await User.findById(req.user.id);
+    const targetTeamId = currentUser.role === 'team_lead' ? currentUser._id.toString() : currentUser.teamId;
 
     const newLead = new Lead({
         ...req.body,
         ownerId: req.user.id,
-        teamId: targetTeamId 
+        teamId: targetTeamId
     });
     await newLead.save();
     
