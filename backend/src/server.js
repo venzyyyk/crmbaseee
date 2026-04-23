@@ -5,7 +5,8 @@ const mongoose = require('mongoose');
 const connectDB = require('./db');
 const auth = require('./auth');
 const leads = require('./leads');
-const User = require('./User'); 
+const User = require('./User'); // Если файл в папке models, исправь на './models/User'
+
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
@@ -17,7 +18,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-
+// --- АВТОРИЗАЦИЯ ---
 app.post('/auth/register', auth.register());
 app.post('/auth/login', auth.login());
 
@@ -35,14 +36,14 @@ app.get('/me', auth.authMiddleware, async (req, res) => {
   }
 });
 
-
+// --- ЛИДЫ ---
 app.get('/leads', auth.authMiddleware, leads.getLeads);
 app.post('/leads', auth.authMiddleware, leads.createLead);
 app.post('/leads/:id/status', auth.authMiddleware, leads.updateStatus);
 app.put('/leads/:id', auth.authMiddleware, leads.updateLead);
 app.delete('/leads/:id', auth.authMiddleware, leads.deleteLead);
 
-
+// --- КОМАНДА ---
 app.get('/team', auth.authMiddleware, async (req, res) => {
   try {
     const currentUser = await User.findById(req.user.id);
@@ -128,8 +129,7 @@ app.post('/team/members', auth.authMiddleware, async (req, res) => {
   }
 });
 
-
-
+// --- АНАЛИТИКА ---
 app.get('/analytics', auth.authMiddleware, async (req, res) => {
   try {
     const Lead = mongoose.model('Lead'); 
@@ -144,13 +144,13 @@ app.get('/analytics', auth.authMiddleware, async (req, res) => {
     if (currentUser.role === 'admin') {
       teamMembers = await User.countDocuments();
     } else if (targetTeamId) {
-
+      // Человек в команде
       teamMembers = await User.countDocuments({
         $or: [{ _id: targetTeamId }, { teamId: targetTeamId }]
       });
       leadQuery = { teamId: targetTeamId };
     } else {
-
+      // ОДИНОЧКА
       teamMembers = 1; 
       leadQuery = { ownerId: req.user.id };
     }
@@ -179,34 +179,7 @@ app.get('/analytics', auth.authMiddleware, async (req, res) => {
       statusList: leads.STATUS_LIST || ['New', 'In Progress', 'Closed']
     });
   } catch (e) {
-    res.status(500).json({ message: 'Ошибка аналитики' });
-  }
-});
-    const totalLeads = await Lead.countDocuments(leadQuery);
-
-    const statusAggr = await Lead.aggregate([
-      { $match: leadQuery },
-      { $group: { _id: "$status", count: { $sum: 1 } } }
-    ]);
-    const byStatus = {};
-    statusAggr.forEach(item => { byStatus[item._id || 'New'] = item.count; });
-
-    const sourceAggr = await Lead.aggregate([
-      { $match: leadQuery },
-      { $group: { _id: "$source", count: { $sum: 1 } } }
-    ]);
-    const bySource = {};
-    sourceAggr.forEach(item => { bySource[item._id || 'Не указано'] = item.count; });
-
-    res.json({
-      totalLeads,
-      byStatus,
-      bySource,
-      teamMembers,
-      statusList: leads.STATUS_LIST || ['New', 'In Progress', 'Closed']
-    });
-  } catch (e) {
-    res.status(500).json({ message: 'Ошибка аналитики' });
+    res.status(500).json({ message: 'Ошибка аналитики: ' + e.message });
   }
 });
 
