@@ -348,7 +348,7 @@ async function onAddLead(event) {
       console.log("✅ Шаг 2: Проверки пройдены, собираем данные...");
       const payload = {
         name: leadForm.name,
-        phone: normalizePhone(leadForm.phone), 
+        phone: leadForm.phone, 
         email: leadForm.email,
         socials: leadForm.socials,
         source: leadForm.source,
