@@ -104,4 +104,41 @@ const deleteLead = async (req, res) => {
     }
 };
 
-module.exports = { getLeads, createLead, updateStatus, updateLead, deleteLead, STATUS_LIST };
+const importLeads = async (req, res) => {
+  try {
+    const { leadsArray } = req.body; 
+
+
+    if (!Array.isArray(leadsArray) || leadsArray.length === 0) {
+      return res.status(400).json({ message: 'Нет данных для импорта' });
+    }
+
+    const User = mongoose.model('User');
+    const currentUser = await User.findById(req.user.id);
+    const targetTeamId = currentUser.role === 'team_lead' ? currentUser._id.toString() : currentUser.teamId;
+
+
+    const leadsToInsert = leadsArray.map(lead => ({
+        name: lead.name || 'Без имени',
+        phone: lead.phone || '',
+        email: lead.email || '',
+        source: lead.source || 'Импорт БД',
+        status: lead.status || 'New',
+        clientRequest: lead.clientRequest || '',
+        ownerId: req.user.id,       
+        teamId: targetTeamId,        
+        createdAt: new Date()
+    }));
+
+
+    await Lead.insertMany(leadsToInsert);
+    
+
+    res.json({ ok: true, importedCount: leadsToInsert.length });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+
+module.exports = { getLeads, createLead, updateStatus, updateLead, deleteLead, importLeads, STATUS_LIST };
