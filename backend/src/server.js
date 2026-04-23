@@ -17,7 +17,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// --- АВТОРИЗАЦИЯ ---
+
 app.post('/auth/register', auth.register());
 app.post('/auth/login', auth.login());
 
@@ -129,13 +129,17 @@ app.post('/team/members', auth.authMiddleware, async (req, res) => {
 });
 
 
+
 app.get('/analytics', auth.authMiddleware, async (req, res) => {
   try {
     const Lead = mongoose.model('Lead'); 
-    const targetTeamId = req.user.role === 'team_lead' ? req.user.id : req.user.teamId;
-   
+    const currentUser = await User.findById(req.user.id);
+    if (!currentUser) return res.status(404).json({ message: 'User not found' });
+
+    const targetTeamId = currentUser.role === 'team_lead' ? currentUser._id.toString() : currentUser.teamId;
+    
     let teamMembers = 0;
-    if (req.user.role === 'admin') {
+    if (currentUser.role === 'admin') {
       teamMembers = await User.countDocuments();
     } else if (targetTeamId) {
       teamMembers = await User.countDocuments({
@@ -143,9 +147,10 @@ app.get('/analytics', auth.authMiddleware, async (req, res) => {
       });
     }
 
-  
     let leadQuery = {};
-    if (req.user.role !== 'admin' && targetTeamId) {
+    if (currentUser.role !== 'admin') {
+
+      if (!targetTeamId) return res.json({ totalLeads: 0, byStatus: {}, bySource: {}, teamMembers: 0, statusList: leads.STATUS_LIST });
       leadQuery = { teamId: targetTeamId };
     }
 
