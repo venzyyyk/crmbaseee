@@ -425,26 +425,50 @@ export default function App() {
     fileInputRef.current?.click()
   }
 
-  async function onBaseFileChosen(event) {
-    const file = event.target.files?.[0]
-    event.target.value = ''
+async function onBaseFileChosen(event) {
+    const file = event.target.files?.[0];
+    event.target.value = ''; 
 
-    if (!file) return
+    if (!file) return;
 
-    const targetTeamId = isAdmin ? selectedAdminTeamId : undefined
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        const leadsArray = results.data;
 
-    showConfirm(t.uploadConfirm, async () => {
-      const result = await apiUploadBase(token, file, targetTeamId)
-      if (!result.ok) {
-        showMessage(result.data?.message || t.error, t.error)
-        return
+        const formattedLeads = leadsArray.map(item => ({
+          name: item.name || item['Имя'] || item['ФИО'] || item['Назва'] || 'Без имени',
+          phone: item.phone || item['Телефон'] || item['Номер'] || '',
+          email: item.email || item['Почта'] || item['Email'] || '',
+          source: item.source || item['Источник'] || item['Джерело'] || 'Импорт CSV',
+          clientRequest: item.request || item['Запрос'] || item['Опис'] || ''
+        }));
+
+        try {
+          const response = await fetch('https://crmbaseee-3au0.onrender.com/leads/import', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ leadsArray: formattedLeads })
+          });
+          
+          const data = await response.json();
+          if (data.ok) {
+            showMessage(`Успішно завантажено лідів: ${data.importedCount}`, t.ready);
+            await loadAll(); 
+          } else {
+            showMessage(`Помилка: ${data.message}`, t.error);
+          }
+        } catch (err) {
+          console.error('Ошибка импорта:', err);
+          showMessage('Не вдалося імпортувати базу. Перевір консоль.', t.error);
+        }
       }
-
-      await loadAll()
-      showMessage(t.uploaded, t.ready)
-    })
+    });
   }
-
   function openLeadInfo(id) {
     const lead = leads.find((item) => String(item.id) === String(id))
 
