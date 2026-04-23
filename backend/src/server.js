@@ -102,7 +102,10 @@ app.post('/team/upgrade-to-lead', auth.authMiddleware, async (req, res) => {
 
 app.post('/team/members', auth.authMiddleware, async (req, res) => {
   try {
-    if (req.user.role !== 'team_lead' && req.user.role !== 'admin') {
+
+    const currentUser = await User.findById(req.user.id);
+
+    if (currentUser.role !== 'team_lead' && currentUser.role !== 'admin') {
       return res.status(403).json({ message: 'Только тимлид может добавлять участников' });
     }
 
@@ -116,7 +119,8 @@ app.post('/team/members', auth.authMiddleware, async (req, res) => {
       email: normEmail,
       passwordHash: String(password),
       role: role,
-      teamId: req.user.role === 'admin' ? req.body.teamId : req.user.id
+
+      teamId: currentUser.role === 'admin' ? req.body.teamId : currentUser._id 
     });
     await newUser.save();
 
@@ -125,7 +129,7 @@ app.post('/team/members', auth.authMiddleware, async (req, res) => {
       member: { id: newUser._id.toString(), email: newUser.email, role: newUser.role } 
     });
   } catch (e) {
-    res.status(500).json({ message: 'Ошибка добавления участника' });
+    res.status(500).json({ message: 'Ошибка добавления участника: ' + e.message });
   }
 });
 
