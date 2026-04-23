@@ -18,20 +18,6 @@ import {
   apiUpdateDeadline
 } from './api.js'
 
-export default function App() {
-
-  const [token, setToken] = useState(null);
-  const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [leads, setLeads] = useState([]);
-  const [selectedLeadIds, setSelectedLeadIds] = useState([]); 
-
-
-  const toggleLeadSelection = (id) => {
-    setSelectedLeadIds(prev => 
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-    );
-  };
 
 
 const STATUS_LIST = ['New', 'Contacted', 'Briefing', 'Proposal', 'Won', 'Lost']
