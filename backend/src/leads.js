@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-
+const User = require('./User'); 
+const Lead = require('./db');
 const STATUS_LIST = ['New', 'In Progress', 'Closed', 'Успішно', 'Втрачено'];
 
 const LeadSchema = new mongoose.Schema({
