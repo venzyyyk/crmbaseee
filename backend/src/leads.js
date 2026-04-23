@@ -19,6 +19,7 @@ const LeadSchema = new mongoose.Schema({
 
 const Lead = mongoose.models.Lead || mongoose.model('Lead', LeadSchema);
 
+// ЖЕЛЕЗОБЕТОННОЕ ПОЛУЧЕНИЕ ЛИДОВ
 const getLeads = async (req, res) => {
   try {
     const User = mongoose.model('User');
@@ -26,17 +27,25 @@ const getLeads = async (req, res) => {
     if (!currentUser) return res.json([]);
 
     let query = {};
+    
     if (currentUser.role !== 'admin') {
-       const targetTeamId = currentUser.role === 'team_lead' ? currentUser._id.toString() : currentUser.teamId;
-       
+       // Надежно достаем ID команды (переводим в String)
+       let targetTeamId = null;
+       if (currentUser.role === 'team_lead') {
+           targetTeamId = currentUser._id.toString();
+       } else if (currentUser.teamId) {
+           targetTeamId = currentUser.teamId.toString();
+       }
+
        if (targetTeamId) {
-           query = { 
+           query = {
                $or: [
-                   { teamId: targetTeamId }, 
-                   { ownerId: req.user.id, teamId: null } 
-               ] 
+                   { teamId: targetTeamId }, // Лиды команды (и Тимлид, и Мембер ищут по этому ID)
+                   { ownerId: req.user.id, teamId: null } // Старые/личные лиды
+               ]
            };
        } else {
+           // Если человек реально ни в какой команде
            query = { ownerId: req.user.id };
        }
     }
@@ -53,16 +62,24 @@ const getLeads = async (req, res) => {
   }
 };
 
+// ЖЕЛЕЗОБЕТОННОЕ СОЗДАНИЕ ЛИДОВ
 const createLead = async (req, res) => {
   try {
     const User = mongoose.model('User');
     const currentUser = await User.findById(req.user.id);
-    const targetTeamId = currentUser.role === 'team_lead' ? currentUser._id.toString() : currentUser.teamId;
+
+    // Надежно достаем ID команды
+    let targetTeamId = null;
+    if (currentUser.role === 'team_lead') {
+        targetTeamId = currentUser._id.toString();
+    } else if (currentUser.teamId) {
+        targetTeamId = currentUser.teamId.toString();
+    }
 
     const newLead = new Lead({
         ...req.body,
         ownerId: req.user.id,
-        teamId: targetTeamId
+        teamId: targetTeamId // Сохраняем правильную строку
     });
     await newLead.save();
     
@@ -104,19 +121,23 @@ const deleteLead = async (req, res) => {
     }
 };
 
+// МАССОВЫЙ ИМПОРТ ЛИДОВ (Уже добавлен для будущей загрузки баз!)
 const importLeads = async (req, res) => {
   try {
-    const { leadsArray } = req.body; 
-
-
+    const { leadsArray } = req.body;
     if (!Array.isArray(leadsArray) || leadsArray.length === 0) {
       return res.status(400).json({ message: 'Нет данных для импорта' });
     }
 
     const User = mongoose.model('User');
     const currentUser = await User.findById(req.user.id);
-    const targetTeamId = currentUser.role === 'team_lead' ? currentUser._id.toString() : currentUser.teamId;
-
+    
+    let targetTeamId = null;
+    if (currentUser.role === 'team_lead') {
+        targetTeamId = currentUser._id.toString();
+    } else if (currentUser.teamId) {
+        targetTeamId = currentUser.teamId.toString();
+    }
 
     const leadsToInsert = leadsArray.map(lead => ({
         name: lead.name || 'Без имени',
@@ -125,20 +146,16 @@ const importLeads = async (req, res) => {
         source: lead.source || 'Импорт БД',
         status: lead.status || 'New',
         clientRequest: lead.clientRequest || '',
-        ownerId: req.user.id,       
-        teamId: targetTeamId,        
+        ownerId: req.user.id,
+        teamId: targetTeamId,
         createdAt: new Date()
     }));
 
-
     await Lead.insertMany(leadsToInsert);
-    
-
     res.json({ ok: true, importedCount: leadsToInsert.length });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
 };
-
 
 module.exports = { getLeads, createLead, updateStatus, updateLead, deleteLead, importLeads, STATUS_LIST };
