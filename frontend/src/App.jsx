@@ -17,7 +17,13 @@ import {
   apiAddTeamLead,
   apiUpdateDeadline
 } from './api.js'
+export default function App() {
+  const [selectedLeadIds, setSelectedLeadIds] = useState([]);
+  const [showPassword, setShowPassword] = useState(false);
 
+  const toggleLeadSelection = (id) => {
+
+  };
 
 
 const STATUS_LIST = ['New', 'Contacted', 'Briefing', 'Proposal', 'Won', 'Lost']
