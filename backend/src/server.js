@@ -43,6 +43,7 @@ app.post('/leads/import', auth.authMiddleware, leads.importLeads);
 app.post('/leads/:id/status', auth.authMiddleware, leads.updateStatus);
 app.put('/leads/:id', auth.authMiddleware, leads.updateLead);
 app.delete('/leads/:id', auth.authMiddleware, leads.deleteLead);
+app.post('/leads/mass-delete', auth.authMiddleware, leads.massDeleteLeads);
 
 // --- КОМАНДА ---
 app.get('/team', auth.authMiddleware, async (req, res) => {
