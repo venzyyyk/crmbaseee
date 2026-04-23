@@ -143,6 +143,7 @@ const importLeads = async (req, res) => {
         name: lead.name || 'Без имени',
         phone: lead.phone || '',
         email: lead.email || '',
+        socials: lead.socials || '',
         source: lead.source || 'Импорт БД',
         status: lead.status || 'New',
         clientRequest: lead.clientRequest || '',
