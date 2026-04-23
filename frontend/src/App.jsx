@@ -33,37 +33,6 @@ export default function App() {
     );
   };
 
-  const onMassDelete = () => {
-
-    if (window.confirm(`Видалити обрані записи (${selectedLeadIds.length} шт.)?`)) {
-      (async () => {
-        try {
-          const response = await fetch('https://crmbaseee.onrender.com/leads/mass-delete', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ ids: selectedLeadIds })
-          });
-          
-          if (response.ok) {
-            setSelectedLeadIds([]); 
-            await loadAll(); 
-          } else {
-            alert('Сервер повернув помилку');
-          }
-        } catch (err) {
-          alert('Помилка з\'єднання з сервером');
-        }
-      })();
-    }
-  };
-
-  function normalizePhone(value) {
-    return String(value || '').trim().replace(/[\s\-()]/g, '')
-  }
-
 
 const STATUS_LIST = ['New', 'Contacted', 'Briefing', 'Proposal', 'Won', 'Lost']
 
@@ -581,26 +550,6 @@ function renderCrm() {
           <input name="clientRequest" placeholder={t.clientRequest} value={leadForm.clientRequest} onChange={(event) => setLeadForm((prev) => ({ ...prev, clientRequest: event.target.value }))} />
           <button type="submit">{t.addLead}</button>
         </form>
-
-
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '15px', marginTop: '10px' }}>
-          <button 
-            type="button"
-            onClick={() => {
-              if (selectedLeadIds.length === filteredLeads.length) setSelectedLeadIds([]);
-              else setSelectedLeadIds(filteredLeads.map(l => l.id));
-            }}
-            style={{ flex: 1, backgroundColor: '#333', fontSize: '14px', border: '1px solid #444' }}
-          >
-            {selectedLeadIds.length === filteredLeads.length ? '❌ Зняти виділення' : '✅ Вибрати всіх'}
-          </button>
-
-          {selectedLeadIds.length > 0 && (
-            <button type="button" onClick={onMassDelete} style={{ flex: 1, backgroundColor: '#ef4444', fontWeight: 'bold' }}>
-              🗑 Видалити ({selectedLeadIds.length})
-            </button>
-          )}
-        </div>
         
         <div id="leads-container">
           {filteredLeads.map((lead) => (
