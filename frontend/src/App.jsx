@@ -446,7 +446,7 @@ async function onBaseFileChosen(event) {
         }));
 
         try {
-          const response = await fetch('https://crmbase-3au0.onrender.com/leads/import', {
+          const response = await fetch('https://crmbaseee.onrender.com/leads/import', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
