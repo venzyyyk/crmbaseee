@@ -438,11 +438,13 @@ async function onBaseFileChosen(event) {
         const leadsArray = results.data;
 
         const formattedLeads = leadsArray.map(item => ({
-          name: item.name || item['Имя'] || item['ФИО'] || item['Назва'] || 'Без имени',
-          phone: item.phone || item['Телефон'] || item['Номер'] || '',
-          email: item.email || item['Почта'] || item['Email'] || '',
-          source: item.source || item['Источник'] || item['Джерело'] || 'Импорт CSV',
-          clientRequest: item.request || item['Запрос'] || item['Опис'] || ''
+          name: item.name || item.Name || item['Имя'] || item['ФИО'] || item['Назва'] || 'Без имени',
+          phone: item.phone || item.Phone || item['Телефон'] || item['Номер'] || '',
+          email: item.email || item.Email || item['Почта'] || '',
+          socials: item.socials || item.Socials || item['Соцсети'] || item['Соцмережі'] || '', 
+          source: item.source || item.Source || item['Источник'] || item['Джерело'] || 'Импорт CSV',
+          status: item.status || item.Status || item['Статус'] || 'New',
+          clientRequest: item.clientRequest || item.ClientRequest || item.description || item.Description || item.request || item['Запрос'] || item['Опис'] || '' 
         }));
 
         try {
