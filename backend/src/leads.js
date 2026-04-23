@@ -19,7 +19,6 @@ const LeadSchema = new mongoose.Schema({
 
 const Lead = mongoose.models.Lead || mongoose.model('Lead', LeadSchema);
 
-
 const getLeads = async (req, res) => {
   try {
     const User = mongoose.model('User');
@@ -27,16 +26,17 @@ const getLeads = async (req, res) => {
     if (!currentUser) return res.json([]);
 
     let query = {};
-    
-
     if (currentUser.role !== 'admin') {
        const targetTeamId = currentUser.role === 'team_lead' ? currentUser._id.toString() : currentUser.teamId;
        
        if (targetTeamId) {
-        
-           query = { teamId: targetTeamId };
+           query = { 
+               $or: [
+                   { teamId: targetTeamId }, 
+                   { ownerId: req.user.id, teamId: null } 
+               ] 
+           };
        } else {
-
            query = { ownerId: req.user.id };
        }
     }
