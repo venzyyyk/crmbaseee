@@ -519,69 +519,48 @@ async function onBaseFileChosen(event) {
   }
 
 function renderCrm() {
-    return (
-      <div>
-
-        <form onSubmit={(event) => event.preventDefault()} style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-            <option value="all">{t.allStatuses}</option>
-            {STATUS_LIST.map((status) => (
-              <option key={status} value={status}>{t.statusLabels[status] || status}</option>
-            ))}
-          </select>
-        </form>
-
-
-        <form id="lead-form" onSubmit={onAddLead}>
-          <input name="name" placeholder={t.leadName} required value={leadForm.name} onChange={(event) => setLeadForm((prev) => ({ ...prev, name: event.target.value }))} />
-          <input name="phone" placeholder={t.phone} value={leadForm.phone} onChange={(event) => setLeadForm((prev) => ({ ...prev, phone: event.target.value }))} />
-          <input type="email" name="email" placeholder={t.emailField} value={leadForm.email} onChange={(event) => setLeadForm((prev) => ({ ...prev, email: event.target.value }))} />
-          <input name="socials" placeholder={t.socials} value={leadForm.socials} onChange={(event) => setLeadForm((prev) => ({ ...prev, socials: event.target.value }))} />
-          <input name="source" placeholder={t.source} value={leadForm.source} onChange={(event) => setLeadForm((prev) => ({ ...prev, source: event.target.value }))} />
-          <input name="clientRequest" placeholder={t.clientRequest} value={leadForm.clientRequest} onChange={(event) => setLeadForm((prev) => ({ ...prev, clientRequest: event.target.value }))} />
-          <button type="submit">{t.addLead}</button>
-        </form>
-        
-        <div id="leads-container">
-          {filteredLeads.map((lead) => (
-            <div
-              key={lead.id}
-              style={{
-                marginBottom: '14px',
-                borderBottom: '1px solid #2b2b2b',
-                paddingBottom: '12px',
-                display: 'grid',
-                gridTemplateColumns: '40px minmax(220px, 260px) minmax(0, 1fr)', 
-                gap: '12px',
-                alignItems: 'start'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-                <input 
-                  type="checkbox"
-                  checked={selectedLeadIds.includes(lead.id)}
-                  onChange={() => toggleLeadSelection(lead.id)}
-                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                />
-              </div>
-
-              <div>
-                <span
-                  style={{ textDecoration: 'underline', cursor: 'pointer', display: 'block', maxWidth: '100%', lineHeight: '1.35', wordBreak: 'normal', overflowWrap: 'anywhere' }}
-                  onClick={() => openLeadInfo(lead.id)}
-                >
-                  {lead.name}
-                </span>
-                <div style={{ marginTop: '6px' }}>({t.statusLabels[lead.status] || lead.status})</div>
-              </div>
-
-              <StatusButtons current={lead.status} onChange={(status) => onSetStatus(lead.id, status)} labels={t.statusLabels} />
-            </div>
-          ))}
-        </div>
+  return (
+    <div id="crm-block"> 
+      <div style={{ marginBottom: '15px' }}>
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="all">{t.allStatuses}</option>
+          {STATUS_LIST.map((s) => <option key={s} value={s}>{t.statusLabels[s] || s}</option>)}
+        </select>
       </div>
-    )
-  }
+
+      <form id="lead-form" onSubmit={onAddLead}>
+        <input name="name" placeholder={t.leadName} required value={leadForm.name} onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })} />
+        <input name="phone" placeholder={t.phone} value={leadForm.phone} onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value })} />
+        <button type="submit">{t.addLead}</button>
+      </form>
+
+
+      <div id="leads-container">
+        {filteredLeads.map((lead) => (
+          <div
+            key={lead.id}
+            style={{
+              marginBottom: '14px',
+              borderBottom: '1px solid #2b2b2b',
+              paddingBottom: '12px',
+              display: 'grid',
+              gridTemplateColumns: '1fr auto', 
+              gap: '15px',
+              alignItems: 'center'
+            }}
+          >
+            <div onClick={() => openLeadInfo(lead.id)} style={{ cursor: 'pointer' }}>
+              <span style={{ textDecoration: 'underline', fontWeight: 'bold' }}>{lead.name}</span>
+              <div style={{ fontSize: '12px', color: '#888' }}>({t.statusLabels[lead.status] || lead.status})</div>
+            </div>
+
+            <StatusButtons current={lead.status} onChange={(status) => onSetStatus(lead.id, status)} labels={t.statusLabels} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
   function renderAnalytics() {
     return (
       <div>
