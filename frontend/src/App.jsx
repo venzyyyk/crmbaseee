@@ -329,90 +329,67 @@ export default function App() {
   }
 
 async function onAddLead(event) {
+    event.preventDefault();
+    console.log("🚀 Шаг 1: Кнопка нажата, начинаем...");
 
-    event.preventDefault()
+    try {
+      if (!leadForm.name.trim()) {
+        console.log("❌ Ошибка: Имя пустое");
+        showMessage(t.error, t.error);
+        return;
+      }
 
+      if (!isValidPhone(leadForm.phone)) {
+        console.log("❌ Ошибка: Телефон не прошел проверку");
+        showMessage(t.invalidPhone, t.error);
+        return;
+      }
 
+      console.log("✅ Шаг 2: Проверки пройдены, собираем данные...");
+      const payload = {
+        name: leadForm.name,
+        phone: normalizePhone(leadForm.phone), 
+        email: leadForm.email,
+        socials: leadForm.socials,
+        source: leadForm.source,
+        clientRequest: leadForm.clientRequest
+      };
 
-    if (!leadForm.name.trim()) {
+      console.log("⏳ Шаг 3: Отправляем в базу данных...", payload);
+      const result = await apiCreateLead(token, payload);
 
-      showMessage(t.error, t.error)
+      if (!result.ok) {
+        console.log("❌ Ошибка от базы данных:", result);
+        showMessage(result.data?.message || t.error, t.error);
+        return;
+      }
 
-      return
-
-    }
-
-
-    if (!isValidPhone(leadForm.phone)) {
-
-      showMessage(t.invalidPhone, t.error)
-
-      return
-
-    }
-
-
-
-    const payload = {
-
-      name: leadForm.name,
-
-      phone: normalizePhone(leadForm.phone),
-
-      email: leadForm.email,
-
-      socials: leadForm.socials,
-
-      source: leadForm.source,
-
-      clientRequest: leadForm.clientRequest
-
-    }
-
-
-
-    const result = await apiCreateLead(token, payload)
-
-    if (!result.ok) {
-
-      showMessage(result.data?.message || t.error, t.error)
-
-      return
-
-    }
-
+      console.log("✅ Шаг 4: База ответила ОК, стучимся в Телеграм...");
       const TELEGRAM_TOKEN = '8715687458:AAFVD0Vc5WGEoMthyJZIQJprigMJTA5FdoU'; 
-
       const CHAT_ID = '731859824'; 
       const message = `🔥 *Новий лід у CRM!*\n👤 *Ім'я:* ${leadForm.name}\n📱 *Телефон:* ${leadForm.phone || 'Не вказано'}\n📝 *Запит:* ${leadForm.clientRequest || 'Немає'}`;
 
-
-
-      fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-
+      await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
         method: 'POST',
-
         headers: { 'Content-Type': 'application/json' },
-
         body: JSON.stringify({ 
-
           chat_id: CHAT_ID, 
-
           text: message,
-
           parse_mode: 'Markdown'
-
         })
+      }).then(() => console.log("✅ Шаг 5: Телеграм отправлен!"))
+        .catch(err => console.log("❌ Ошибка ТГ:", err));
 
-      }).catch(err => console.log('Ошибка ТГ:', err));
+      console.log("🧹 Шаг 6: Очищаем форму и обновляем список...");
+      setLeadForm({ name: '', phone: '', email: '', socials: '', source: '', clientRequest: '' });
+      await loadAll();
+      
+      console.log("🎉 ВСЁ УСПЕШНО ЗАВЕРШЕНО!");
 
-
-    setLeadForm(EMPTY_LEAD_FORM)
-
-    await loadAll()
-
+    } catch (error) {
+      console.error("🚨 КРИТИЧЕСКАЯ ОШИБКА В КОДЕ:", error);
+    }
   }
-
   
   async function onAddMember(event) {
     event.preventDefault()
