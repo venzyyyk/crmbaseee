@@ -393,6 +393,28 @@ async function onAddLead(event) {
       console.error("🚨 КРИТИЧЕСКАЯ ОШИБКА В КОДЕ:", error);
     }
   }
+  async function onSetStatus(id, status) {
+    const result = await apiSetStatus(token, id, status);
+    
+    if (!result.ok) {
+      showMessage(result.data?.message || t.error, t.error);
+      return;
+    }
+    await loadAll();
+  }
+
+  function onDeleteLead(id) {
+    showConfirm(t.deleteConfirm, async () => {
+      const result = await apiDeleteLead(token, id);
+      
+      if (!result.ok) {
+        showMessage(result.data?.message || t.error, t.error);
+        return;
+      }
+      setModalOpen(false);
+      await loadAll();
+    });
+  }
   
   async function onAddMember(event) {
     event.preventDefault()
