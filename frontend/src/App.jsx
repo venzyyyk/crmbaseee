@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Papa from 'papaparse';
 import Modal from './components/Modal.jsx'
+import { normalizePhone } from './utils/helpers'; 
 import {
   apiRegister,
   apiLogin,
@@ -18,6 +19,10 @@ import {
   apiUpdateDeadline
 } from './api.js'
 
+const normalizePhone = (phone) => {
+  if (!phone) return "";
+  return phone.replace(/\D/g, ""); 
+};
 
 
 const STATUS_LIST = ['New', 'Contacted', 'Briefing', 'Proposal', 'Won', 'Lost']
