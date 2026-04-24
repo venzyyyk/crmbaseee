@@ -19,12 +19,6 @@ import {
   apiUpdateDeadline
 } from './api.js'
 
-const normalizePhone = (phone) => {
-  if (!phone) return "";
-  return phone.replace(/\D/g, ""); 
-};
-
-
 const STATUS_LIST = ['New', 'Contacted', 'Briefing', 'Proposal', 'Won', 'Lost']
 
 const STATUS_COLORS = {
