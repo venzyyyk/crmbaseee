@@ -141,6 +141,36 @@ app.post('/team/members', auth.authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Ошибка добавления участника: ' + e.message });
   }
 });
+app.post('/admin/team-leads', auth.authMiddleware, async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.user.id);
+
+    if (currentUser.role !== 'admin') {
+      return res.status(403).json({ message: 'Только админ может создавать тимлидов' });
+    }
+
+    const { email, password, teamName } = req.body;
+    const normEmail = String(email || '').trim().toLowerCase();
+    
+    const exists = await User.findOne({ email: normEmail });
+    if (exists) return res.status(409).json({ message: 'Email уже зарегистрирован' });
+
+    const newUser = new User({
+      email: normEmail,
+      passwordHash: String(password),
+      role: 'team_lead',
+      teamName: teamName || `Команда ${normEmail.split('@')[0]}`
+    });
+    await newUser.save();
+
+    res.json({ 
+      ok: true, 
+      teamLead: { id: newUser._id.toString(), email: newUser.email, role: newUser.role } 
+    });
+  } catch (e) {
+    res.status(500).json({ message: 'Ошибка добавления тимлида: ' + e.message });
+  }
+});
 
 // --- АНАЛИТИКА ---
 app.get('/analytics', auth.authMiddleware, async (req, res) => {
