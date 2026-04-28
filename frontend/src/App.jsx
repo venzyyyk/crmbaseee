@@ -25,6 +25,9 @@ const normalizePhone = (phone) => {
 
 const STATUS_LIST = ['New', 'Contacted', 'Briefing', 'Proposal', 'Won', 'Lost']
 
+const [statusToChange, setStatusToChange] = useState(null);
+const [statusComment, setStatusComment] = useState('');
+
 const STATUS_COLORS = {
   New: '#6b7280',
   Contacted: '#3b82f6',
@@ -384,14 +387,28 @@ async function onAddLead(event) {
       console.error("error", error);
     }
   }
-  async function onSetStatus(id, status) {
-    const result = await apiSetStatus(token, id, status);
-    
-    if (!result.ok) {
-      showMessage(result.data?.message || t.error, t.error);
+  
+  function onSetStatus(id, status) {
+    setStatusToChange({ id, status });
+    setStatusComment(''); 
+    setModalTitle("Додати коментар");
+  }
+
+  async function confirmStatusChange(id, status) {
+    if (!statusComment.trim()) {
+      alert("Коментар обов'язковий!");
       return;
     }
-    await loadAll();
+
+    const result = await apiSetStatus(token, id, status, statusComment); 
+    if (result.ok) {
+      setStatusComment('');
+      setStatusToChange(null);
+      setModalTitle(t.leadInfo);
+      await loadAll();
+    } else {
+      showMessage(result.data?.message || t.error, t.error);
+    }
   }
 
   function onDeleteLead(id) {
@@ -562,6 +579,35 @@ function renderCrm() {
         <button type="submit">{t.addLead}</button>
       </form>
 
+      if (modalTitle === "Додати коментар" && statusToChange) {
+      return (
+        <div>
+          <p>Опишіть причину зміни статусу на <strong>{t.statusLabels[statusToChange.status] || statusToChange.status}</strong>:</p>
+          <textarea 
+            style={{ width: '100%', minHeight: '100px', background: '#2a2a2a', color: '#fff', borderRadius: '8px', padding: '10px', marginTop: '10px', fontFamily: 'inherit' }}
+            value={statusComment}
+            onChange={(e) => setStatusComment(e.target.value)}
+            placeholder="Напишіть коментар..."
+          />
+          <button 
+            type="button"
+            style={{ marginTop: '15px', width: '100%', padding: '12px', backgroundColor: '#4caf50', border: 'none', borderRadius: '8px', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}
+            onClick={() => confirmStatusChange(statusToChange.id, statusToChange.status)}
+          >
+            Зберегти та змінити статус
+          </button>
+        </div>
+      );
+    }
+
+    if (!selectedLead || modalTitle !== t.leadInfo) {
+      return modalBody;
+    }
+
+    return (
+      <div>
+        <p><strong>{t.name}:</strong> {selectedLead.name}</p>
+        
 
       <div id="leads-container">
         {filteredLeads.map((lead) => (
