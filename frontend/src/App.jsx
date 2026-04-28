@@ -333,22 +333,17 @@ export default function App() {
 
 async function onAddLead(event) {
     event.preventDefault();
-    console.log("🚀 Шаг 1: Кнопка нажата, начинаем...");
-
     try {
       if (!leadForm.name.trim()) {
         console.log("❌ Ошибка: Имя пустое");
         showMessage(t.error, t.error);
         return;
       }
-
       if (!isValidPhone(leadForm.phone)) {
         console.log("❌ Ошибка: Телефон не прошел проверку");
         showMessage(t.invalidPhone, t.error);
         return;
       }
-
-      console.log("✅ Шаг 2: Проверки пройдены, собираем данные...");
       const payload = {
         name: leadForm.name,
         phone: leadForm.phone,
@@ -357,8 +352,6 @@ async function onAddLead(event) {
         source: leadForm.source,
         clientRequest: leadForm.clientRequest
       };
-
-      console.log("⏳ Шаг 3: Отправляем в базу данных...", payload);
       const result = await apiCreateLead(token, payload);
 
       if (!result.ok) {
@@ -366,8 +359,6 @@ async function onAddLead(event) {
         showMessage(result.data?.message || t.error, t.error);
         return;
       }
-
-      console.log("✅ Шаг 4: База ответила ОК, стучимся в Телеграм...");
       const TELEGRAM_TOKEN = '8715687458:AAFVD0Vc5WGEoMthyJZIQJprigMJTA5FdoU'; 
       const CHAT_ID = '731859824'; 
       const message = `🔥 *Новий лід у CRM!*\n👤 *Ім'я:* ${leadForm.name}\n📱 *Телефон:* ${leadForm.phone || 'Не вказано'}\n📝 *Запит:* ${leadForm.clientRequest || 'Немає'}`;
@@ -380,17 +371,17 @@ async function onAddLead(event) {
           text: message,
           parse_mode: 'Markdown'
         })
-      }).then(() => console.log("✅ Шаг 5: Телеграм отправлен!"))
-        .catch(err => console.log("❌ Ошибка ТГ:", err));
+      }).then(() => 
+        .catch(err => console.log("erorr:", err));
 
-      console.log("🧹 Шаг 6: Очищаем форму и обновляем список...");
+
       setLeadForm({ name: '', phone: '', email: '', socials: '', source: '', clientRequest: '' });
       await loadAll();
       
-      console.log("🎉 ВСЁ УСПЕШНО ЗАВЕРШЕНО!");
+
 
     } catch (error) {
-      console.error("🚨 КРИТИЧЕСКАЯ ОШИБКА В КОДЕ:", error);
+      console.error("error", error);
     }
   }
   async function onSetStatus(id, status) {
@@ -694,7 +685,8 @@ function renderCrm() {
     )
   }
 
-  function renderLeadModal() {
+function renderLeadModal() {
+
     if (!selectedLead || modalTitle !== t.leadInfo) {
       return modalBody
     }
@@ -709,7 +701,26 @@ function renderCrm() {
         <p><strong>{t.statusLower}:</strong> {t.statusLabels[selectedLead.status] || selectedLead.status}</p>
         <p><strong>{t.requestLower}:</strong> {selectedLead.clientRequest || '—'}</p>
 
-        <StatusButtons current={selectedLead.status} onChange={(status) => onSetStatus(selectedLead.id, status)} labels={t.statusLabels} />
+        {/* --- Історія роботи (Коментарі) --- */}
+        {selectedLead.history && selectedLead.history.length > 0 && (
+          <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#111', borderRadius: '8px', maxHeight: '150px', overflowY: 'auto' }}>
+            <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#888' }}>Історія роботи:</h4>
+            {selectedLead.history.map((item, index) => (
+              <div key={index} style={{ marginBottom: '8px', fontSize: '13px', borderLeft: '2px solid #4caf50', paddingLeft: '8px' }}>
+                <div style={{ color: '#aaa', fontSize: '11px' }}>
+                  {new Date(item.date).toLocaleString()} — <strong>{item.author}</strong>
+                </div>
+                <div>Статус: <strong>{t.statusLabels[item.status] || item.status}</strong></div>
+                <div style={{ color: '#e0e0e0', fontStyle: 'italic', marginTop: '2px' }}>«{item.comment}»</div>
+              </div>
+            ))}
+          </div>
+        )}
+        {/* ---------------------------------- */}
+
+        <div style={{ marginTop: '15px' }}>
+          <StatusButtons current={selectedLead.status} onChange={(status) => onSetStatus(selectedLead.id, status)} labels={t.statusLabels} />
+        </div>
 
         {canEditDeadline ? (
           <div style={{ display: 'none' }}>
@@ -718,7 +729,7 @@ function renderCrm() {
           </div>
         ) : null}
 
-        <button id="delete-btn" style={{ marginTop: '10px' }} type="button" onClick={() => onDeleteLead(selectedLead.id)}>
+        <button id="delete-btn" style={{ marginTop: '15px', backgroundColor: '#f44336' }} type="button" onClick={() => onDeleteLead(selectedLead.id)}>
           {t.deleteLead}
         </button>
       </div>
@@ -766,10 +777,6 @@ function renderCrm() {
 
           <button type="submit">{authMode === 'register' ? t.registerBtn : t.login}</button>
         </form>
-
-        <div style={{ marginTop: '16px', opacity: 0.8 }}>
-          <p>{t.demo}</p>
-        </div>
       </div>
 
       <div id="crm-block" style={{ display: token ? 'block' : 'none' }}>
@@ -809,7 +816,7 @@ function renderCrm() {
           </div>
         ) : null}
 
-        <input ref={fileInputRef} type="file" accept=".sqlite,.db" style={{ display: 'none' }} onChange={onBaseFileChosen} />
+        <input ref={fileInputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={onBaseFileChosen} />
       </div>
 
       <Modal open={modalOpen} title={modalTitle} onClose={() => setModalOpen(false)}>
