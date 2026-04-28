@@ -411,17 +411,6 @@ async function confirmStatusChange(id, status) {
     }
   }
 
-    const result = await apiSetStatus(token, id, status, statusComment); 
-    if (result.ok) {
-      setStatusComment('');
-      setStatusToChange(null);
-      setModalTitle(t.leadInfo);
-      await loadAll();
-    } else {
-      showMessage(result.data?.message || t.error, t.error);
-    }
-  }
-
   function onDeleteLead(id) {
     showConfirm(t.deleteConfirm, async () => {
       const result = await apiDeleteLead(token, id);
