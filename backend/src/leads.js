@@ -14,7 +14,14 @@ const LeadSchema = new mongoose.Schema({
   ownerId: { type: String, default: null },
   teamId: { type: String, default: null },
   assignedToUserId: { type: String, default: null },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+
+  history: [{
+    status: String,
+    comment: String,
+    author: String,
+    date: { type: Date, default: Date.now }
+  }]
 });
 
 const Lead = mongoose.models.Lead || mongoose.model('Lead', LeadSchema);
@@ -94,14 +101,24 @@ const createLead = async (req, res) => {
 const updateStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
-    await Lead.findByIdAndUpdate(id, { status });
+    const { status, comment } = req.body; 
+    const User = mongoose.model('User');
+    const currentUser = await User.findById(req.user.id);
+    const historyEntry = {
+      status: status,
+      comment: comment || 'Без коментаря',
+      author: currentUser ? currentUser.email : 'Невідомий',
+      date: new Date()
+    };
+    await Lead.findByIdAndUpdate(id, { 
+      status: status,
+      $push: { history: historyEntry }
+    });
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
 };
-
 const updateLead = async (req, res) => {
   try {
     const { id } = req.params;
