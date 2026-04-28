@@ -371,7 +371,7 @@ async function onAddLead(event) {
           text: message,
           parse_mode: 'Markdown'
         })
-      }).then(() => 
+      }).then(() => console.log("send"))
         .catch(err => console.log("erorr:", err));
 
 
