@@ -394,7 +394,7 @@ function onSetStatus(id, status) {
     setModalOpen(true); 
   }
 
-function confirmStatusChange(id, status) {
+async function confirmStatusChange(id, status) {
     if (!statusComment.trim()) {
       alert("Коментар обов'язковий!");
       return;
