@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const connectDB = require('./db');
 const auth = require('./auth');
 const leads = require('./leads');
-const User = require('./User'); // Если файл в папке models, исправь на './models/User'
+const User = require('./User'); 
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -171,8 +171,7 @@ app.post('/admin/team-leads', auth.authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Ошибка добавления тимлида: ' + e.message });
   }
 });
-
-// --- АНАЛИТИКА ---
+//analitika
 app.get('/analytics', auth.authMiddleware, async (req, res) => {
   try {
     const Lead = mongoose.model('Lead'); 
@@ -187,7 +186,6 @@ app.get('/analytics', auth.authMiddleware, async (req, res) => {
    if (currentUser.role === 'admin') {
       teamMembers = await User.countDocuments();
     } else if (targetTeamId) {
-
       teamMembers = await User.countDocuments({
         $or: [{ _id: targetTeamId }, { teamId: targetTeamId }]
       });
@@ -198,7 +196,6 @@ app.get('/analytics', auth.authMiddleware, async (req, res) => {
         ] 
       };
     } else {
-
       teamMembers = 1; 
       leadQuery = { ownerId: req.user.id };
     }
@@ -219,12 +216,44 @@ app.get('/analytics', auth.authMiddleware, async (req, res) => {
     const bySource = {};
     sourceAggr.forEach(item => { bySource[item._id || 'Не указано'] = item.count; });
 
+    // --- НОВАЯ ЛОГИКА ДЛЯ ТИМЛИДА И АДМИНА ---
+    let managerPerformance = [];
+    if (currentUser.role === 'admin' || currentUser.role === 'team_lead') {
+      const managerStats = await Lead.aggregate([
+        { $match: leadQuery },
+        { 
+          $group: { 
+            _id: "$ownerId", 
+            won: { $sum: { $cond: [{ $eq: ["$status", "Won"] }, 1, 0] } },
+            lost: { $sum: { $cond: [{ $eq: ["$status", "Lost"] }, 1, 0] } },
+            total: { $sum: 1 }
+          } 
+        }
+      ]);
+      
+      const validOwnerIds = managerStats.map(s => s._id).filter(id => id != null);
+      const managers = await User.find({ _id: { $in: validOwnerIds } }, 'email');
+
+      managerPerformance = managerStats.map(stat => {
+        const manager = managers.find(m => m._id.toString() === stat._id?.toString());
+        return {
+          _id: stat._id,
+          won: stat.won,
+          lost: stat.lost,
+          total: stat.total,
+          email: manager ? manager.email : 'Неизвестный менеджер'
+        };
+      });
+    }
+
+
     res.json({
       totalLeads,
       byStatus,
       bySource,
       teamMembers,
-      statusList: leads.STATUS_LIST || ['New', 'In Progress', 'Closed']
+      statusList: leads.STATUS_LIST || ['New', 'In Progress', 'Closed'],
+      managerPerformance 
     });
   } catch (e) {
     res.status(500).json({ message: 'Ошибка аналитики: ' + e.message });
