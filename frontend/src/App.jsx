@@ -387,10 +387,11 @@ export default function App() {
     }
   }
   
-  function onSetStatus(id, status) {
+ function onSetStatus(id, status) {
     setStatusToChange({ id, status });
     setStatusComment(''); 
     setModalTitle("Додати коментар");
+    setModalOpen(true); 
   }
 
   async function confirmStatusChange(id, status) {
@@ -398,6 +399,17 @@ export default function App() {
       alert("Коментар обов'язковий!");
       return;
     }
+
+    const result = await apiSetStatus(token, id, status, statusComment); 
+    if (result.ok) {
+      setStatusComment('');
+      setStatusToChange(null);
+      setModalOpen(false); 
+      await loadAll();
+    } else {
+      showMessage(result.data?.message || t.error, t.error);
+    }
+  }
 
     const result = await apiSetStatus(token, id, status, statusComment); 
     if (result.ok) {
