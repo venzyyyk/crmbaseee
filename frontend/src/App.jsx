@@ -25,9 +25,6 @@ const normalizePhone = (phone) => {
 
 const STATUS_LIST = ['New', 'Contacted', 'Briefing', 'Proposal', 'Won', 'Lost']
 
-const [statusToChange, setStatusToChange] = useState(null);
-const [statusComment, setStatusComment] = useState('');
-
 const STATUS_COLORS = {
   New: '#6b7280',
   Contacted: '#3b82f6',
@@ -102,8 +99,6 @@ const UI = {
     statusLabels: { New: 'New', Contacted: 'Contacted', Briefing: 'Briefing', Proposal: 'Proposal', Won: 'Won', Lost: 'Lost' }
   }
 }
-
-
 
 //func
 function isValidPhone(value) {
@@ -228,6 +223,11 @@ export default function App() {
   const [modalTitle, setModalTitle] = useState('')
   const [modalBody, setModalBody] = useState(null)
   const [selectedLeadId, setSelectedLeadId] = useState(null)
+  
+  // Добавленные стейты для комментариев
+  const [statusToChange, setStatusToChange] = useState(null);
+  const [statusComment, setStatusComment] = useState('');
+
   const [selectedLeadIds, setSelectedLeadIds] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const fileInputRef = useRef(null)
@@ -334,7 +334,7 @@ export default function App() {
     }
   }
 
-async function onAddLead(event) {
+  async function onAddLead(event) {
     event.preventDefault();
     try {
       if (!leadForm.name.trim()) {
@@ -381,7 +381,6 @@ async function onAddLead(event) {
       setLeadForm({ name: '', phone: '', email: '', socials: '', source: '', clientRequest: '' });
       await loadAll();
       
-
 
     } catch (error) {
       console.error("error", error);
@@ -472,7 +471,7 @@ async function onAddLead(event) {
     fileInputRef.current?.click()
   }
 
-async function onBaseFileChosen(event) {
+  async function onBaseFileChosen(event) {
     const file = event.target.files?.[0];
     event.target.value = ''; 
 
@@ -520,6 +519,7 @@ async function onBaseFileChosen(event) {
       }
     });
   }
+
   function openLeadInfo(id) {
     const lead = leads.find((item) => String(item.id) === String(id))
 
@@ -559,82 +559,53 @@ async function onBaseFileChosen(event) {
     )
   }
 
-function renderCrm() {
-  return (
-    <div id="crm-block"> 
-      <div style={{ marginBottom: '15px' }}>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="all">{t.allStatuses}</option>
-          {STATUS_LIST.map((s) => <option key={s} value={s}>{t.statusLabels[s] || s}</option>)}
-        </select>
-      </div>
-
-      <form id="lead-form" onSubmit={onAddLead} style={{ marginBottom: '20px' }}>
-        <input name="name" placeholder={t.leadName} required value={leadForm.name} onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })} />
-        <input name="phone" placeholder={t.phone} value={leadForm.phone} onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value })} />
-        <input type="email" name="email" placeholder={t.emailField} value={leadForm.email} onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })} />
-        <input name="socials" placeholder={t.socials} value={leadForm.socials} onChange={(e) => setLeadForm({ ...leadForm, socials: e.target.value })} />
-        <input name="source" placeholder={t.source} value={leadForm.source} onChange={(e) => setLeadForm({ ...leadForm, source: e.target.value })} />
-        <input name="clientRequest" placeholder={t.clientRequest} value={leadForm.clientRequest} onChange={(e) => setLeadForm({ ...leadForm, clientRequest: e.target.value })} />
-        <button type="submit">{t.addLead}</button>
-      </form>
-
-      if (modalTitle === "Додати коментар" && statusToChange) {
-      return (
-        <div>
-          <p>Опишіть причину зміни статусу на <strong>{t.statusLabels[statusToChange.status] || statusToChange.status}</strong>:</p>
-          <textarea 
-            style={{ width: '100%', minHeight: '100px', background: '#2a2a2a', color: '#fff', borderRadius: '8px', padding: '10px', marginTop: '10px', fontFamily: 'inherit' }}
-            value={statusComment}
-            onChange={(e) => setStatusComment(e.target.value)}
-            placeholder="Напишіть коментар..."
-          />
-          <button 
-            type="button"
-            style={{ marginTop: '15px', width: '100%', padding: '12px', backgroundColor: '#4caf50', border: 'none', borderRadius: '8px', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}
-            onClick={() => confirmStatusChange(statusToChange.id, statusToChange.status)}
-          >
-            Зберегти та змінити статус
-          </button>
-        </div>
-      );
-    }
-
-    if (!selectedLead || modalTitle !== t.leadInfo) {
-      return modalBody;
-    }
-
+  function renderCrm() {
     return (
-      <div>
-        <p><strong>{t.name}:</strong> {selectedLead.name}</p>
-        
+      <div id="crm-block"> 
+        <div style={{ marginBottom: '15px' }}>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="all">{t.allStatuses}</option>
+            {STATUS_LIST.map((s) => <option key={s} value={s}>{t.statusLabels[s] || s}</option>)}
+          </select>
+        </div>
 
-      <div id="leads-container">
-        {filteredLeads.map((lead) => (
-          <div
-            key={lead.id}
-            style={{
-              marginBottom: '14px',
-              borderBottom: '1px solid #2b2b2b',
-              paddingBottom: '12px',
-              display: 'grid',
-              gridTemplateColumns: '1fr auto', 
-              gap: '15px',
-              alignItems: 'center'
-            }}
-          >
-            <div onClick={() => openLeadInfo(lead.id)} style={{ cursor: 'pointer' }}>
-              <span style={{ textDecoration: 'underline', fontWeight: 'bold' }}>{lead.name}</span>
-              <div style={{ fontSize: '12px', color: '#888' }}>({t.statusLabels[lead.status] || lead.status})</div>
+        <form id="lead-form" onSubmit={onAddLead} style={{ marginBottom: '20px' }}>
+          <input name="name" placeholder={t.leadName} required value={leadForm.name} onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })} />
+          <input name="phone" placeholder={t.phone} value={leadForm.phone} onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value })} />
+          <input type="email" name="email" placeholder={t.emailField} value={leadForm.email} onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })} />
+          <input name="socials" placeholder={t.socials} value={leadForm.socials} onChange={(e) => setLeadForm({ ...leadForm, socials: e.target.value })} />
+          <input name="source" placeholder={t.source} value={leadForm.source} onChange={(e) => setLeadForm({ ...leadForm, source: e.target.value })} />
+          <input name="clientRequest" placeholder={t.clientRequest} value={leadForm.clientRequest} onChange={(e) => setLeadForm({ ...leadForm, clientRequest: e.target.value })} />
+          <button type="submit">{t.addLead}</button>
+        </form>
+
+        <div id="leads-container">
+          {filteredLeads.map((lead) => (
+            <div
+              key={lead.id}
+              style={{
+                marginBottom: '14px',
+                borderBottom: '1px solid #2b2b2b',
+                paddingBottom: '12px',
+                display: 'grid',
+                gridTemplateColumns: '1fr auto', 
+                gap: '15px',
+                alignItems: 'center'
+              }}
+            >
+              <div onClick={() => openLeadInfo(lead.id)} style={{ cursor: 'pointer' }}>
+                <span style={{ textDecoration: 'underline', fontWeight: 'bold' }}>{lead.name}</span>
+                <div style={{ fontSize: '12px', color: '#888' }}>({t.statusLabels[lead.status] || lead.status})</div>
+              </div>
+
+              <StatusButtons current={lead.status} onChange={(status) => onSetStatus(lead.id, status)} labels={t.statusLabels} />
             </div>
-
-            <StatusButtons current={lead.status} onChange={(status) => onSetStatus(lead.id, status)} labels={t.statusLabels} />
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
-  )
-}
+    )
+  }
+
   function renderAnalytics() {
     return (
       <div>
@@ -643,6 +614,35 @@ function renderCrm() {
         <BarChart data={analytics?.byStatus || {}} />
         <h3 style={{ marginTop: '18px' }}>{t.bySource}</h3>
         <BarChart data={analytics?.bySource || {}} />
+
+        {/* Таблица результативности менеджеров (Отображается только у Админа и Тимлида) */}
+        {analytics?.managerPerformance && analytics.managerPerformance.length > 0 && (
+          <div style={{ marginTop: '25px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '12px', border: '1px solid #333' }}>
+            <h3 style={{ margin: '0 0 15px 0' }}>Ефективність команди</h3>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #333' }}>
+                    <th style={{ padding: '10px 5px' }}>Менеджер</th>
+                    <th style={{ padding: '10px 5px', color: '#10b981' }}>Успішно</th>
+                    <th style={{ padding: '10px 5px', color: '#ef4444' }}>Втрачено</th>
+                    <th style={{ padding: '10px 5px' }}>Всього</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {analytics.managerPerformance.map(m => (
+                    <tr key={m._id} style={{ borderBottom: '1px solid #222' }}>
+                      <td style={{ padding: '10px 5px' }}>{m.email}</td>
+                      <td style={{ padding: '10px 5px', fontWeight: 'bold' }}>{m.won}</td>
+                      <td style={{ padding: '10px 5px', fontWeight: 'bold' }}>{m.lost}</td>
+                      <td style={{ padding: '10px 5px' }}>{m.total}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -694,7 +694,7 @@ function renderCrm() {
               <input type="password" placeholder={t.password} value={memberForm.password} onChange={(event) => setMemberForm((prev) => ({ ...prev, password: event.target.value }))} />
               <select value={memberForm.role} onChange={(event) => setMemberForm((prev) => ({ ...prev, role: event.target.value }))}>
                 <option value="member">{t.member}</option>
-               
+                
               </select>
               <button type="submit">{t.addMember}</button>
             </form>
@@ -731,7 +731,28 @@ function renderCrm() {
     )
   }
 
-function renderLeadModal() {
+  function renderLeadModal() {
+
+    if (modalTitle === "Додати коментар" && statusToChange) {
+      return (
+        <div>
+          <p>Опишіть причину зміни статусу на <strong>{t.statusLabels[statusToChange.status] || statusToChange.status}</strong>:</p>
+          <textarea 
+            style={{ width: '100%', minHeight: '100px', background: '#2a2a2a', color: '#fff', borderRadius: '8px', padding: '10px', marginTop: '10px', fontFamily: 'inherit' }}
+            value={statusComment}
+            onChange={(e) => setStatusComment(e.target.value)}
+            placeholder="Напишіть коментар..."
+          />
+          <button 
+            type="button"
+            style={{ marginTop: '15px', width: '100%', padding: '12px', backgroundColor: '#4caf50', border: 'none', borderRadius: '8px', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}
+            onClick={() => confirmStatusChange(statusToChange.id, statusToChange.status)}
+          >
+            Зберегти та змінити статус
+          </button>
+        </div>
+      );
+    }
 
     if (!selectedLead || modalTitle !== t.leadInfo) {
       return modalBody
@@ -775,7 +796,7 @@ function renderLeadModal() {
           </div>
         ) : null}
 
-        <button id="delete-btn" style={{ marginTop: '15px', backgroundColor: '#f44336' }} type="button" onClick={() => onDeleteLead(selectedLead.id)}>
+        <button id="delete-btn" style={{ marginTop: '15px', backgroundColor: '#f44336', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', width: '100%', cursor: 'pointer' }} type="button" onClick={() => onDeleteLead(selectedLead.id)}>
           {t.deleteLead}
         </button>
       </div>
