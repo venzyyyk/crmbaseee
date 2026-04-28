@@ -22,7 +22,8 @@ export const apiRegister = (email, password, role, teamName) => j('POST', '/auth
 export const apiLogin = (email, password) => j('POST', '/auth/login', { email, password }).then(r => { if (!r.ok) throw new Error(r.data?.message || 'Login error'); return r.data })
 export const apiGetLeads = (token) => j('GET', '/leads', null, token).then(r => r.data)
 export const apiCreateLead = (token, lead) => j('POST', '/leads', lead, token)
-export const apiSetStatus = (token, id, status) => j('POST', `/leads/${id}/status`, { status }, token)
+export const apiSetStatus = (token, id, status, comment) => 
+  j('POST', `/leads/${id}/status`, { status, comment }, token)
 export const apiDeleteLead = (token, id) => j('DELETE', `/leads/${id}`, null, token)
 export const apiGetAnalytics = (token) => j('GET', '/analytics', null, token).then(r => r.data)
 export const apiMe = (token) => j('GET', '/me', null, token).then(r => r.data)
