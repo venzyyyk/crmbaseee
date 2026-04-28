@@ -387,14 +387,14 @@ export default function App() {
     }
   }
   
- function onSetStatus(id, status) {
+function onSetStatus(id, status) {
     setStatusToChange({ id, status });
     setStatusComment(''); 
     setModalTitle("Додати коментар");
     setModalOpen(true); 
   }
 
-  async function confirmStatusChange(id, status) {
+function confirmStatusChange(id, status) {
     if (!statusComment.trim()) {
       alert("Коментар обов'язковий!");
       return;
