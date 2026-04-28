@@ -400,7 +400,7 @@ export default function App() {
       return;
     }
 
-    const result = await apiSetStatus(token, id, status, statusComment); 
+  const result = await apiSetStatus(token, id, status, statusComment); 
     if (result.ok) {
       setStatusComment('');
       setStatusToChange(null);
