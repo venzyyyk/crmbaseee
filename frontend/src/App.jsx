@@ -208,14 +208,12 @@ export default function App() {
   const [authPassword, setAuthPassword] = useState('')
   const [teamName, setTeamName] = useState('')
   const [lang, setLang] = useState('uk')
-
   const [leadForm, setLeadForm] = useState(EMPTY_LEAD_FORM)
   const [memberForm, setMemberForm] = useState(EMPTY_MEMBER_FORM)
   const [teamLeadForm, setTeamLeadForm] = useState(EMPTY_TEAM_LEAD_FORM)
   const [upgradeTeamName, setUpgradeTeamName] = useState('')
   const [selectedAdminTeamId, setSelectedAdminTeamId] = useState('')
   const [deadlineValue, setDeadlineValue] = useState('')
-
   const [leads, setLeads] = useState([])
   const [analytics, setAnalytics] = useState(null)
   const [statusFilter, setStatusFilter] = useState('all')
@@ -223,15 +221,11 @@ export default function App() {
   const [modalTitle, setModalTitle] = useState('')
   const [modalBody, setModalBody] = useState(null)
   const [selectedLeadId, setSelectedLeadId] = useState(null)
-  
-  // Добавленные стейты для комментариев
   const [statusToChange, setStatusToChange] = useState(null);
   const [statusComment, setStatusComment] = useState('');
-
   const [selectedLeadIds, setSelectedLeadIds] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const fileInputRef = useRef(null)
-
   const t = UI[lang]
   const userRole = profile?.user?.role
   const isAdmin = userRole === 'admin'
@@ -338,12 +332,12 @@ export default function App() {
     event.preventDefault();
     try {
       if (!leadForm.name.trim()) {
-        console.log("❌ Ошибка: Имя пустое");
+        console.log(" Ошибка: Имя пустое");
         showMessage(t.error, t.error);
         return;
       }
       if (!isValidPhone(leadForm.phone)) {
-        console.log("❌ Ошибка: Телефон не прошел проверку");
+        console.log(" Ошибка: Телефон не прошел проверку");
         showMessage(t.invalidPhone, t.error);
         return;
       }
@@ -358,7 +352,7 @@ export default function App() {
       const result = await apiCreateLead(token, payload);
 
       if (!result.ok) {
-        console.log("❌ Ошибка от базы данных:", result);
+        console.log(" Ошибка от базы данных:", result);
         showMessage(result.data?.message || t.error, t.error);
         return;
       }
@@ -615,8 +609,6 @@ async function confirmStatusChange(id, status) {
         <BarChart data={analytics?.byStatus || {}} />
         <h3 style={{ marginTop: '18px' }}>{t.bySource}</h3>
         <BarChart data={analytics?.bySource || {}} />
-
-        {/* Таблица результативности менеджеров (Отображается только у Админа и Тимлида) */}
         {analytics?.managerPerformance && analytics.managerPerformance.length > 0 && (
           <div style={{ marginTop: '25px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '12px', border: '1px solid #333' }}>
             <h3 style={{ margin: '0 0 15px 0' }}>Ефективність команди</h3>
@@ -784,7 +776,6 @@ async function confirmStatusChange(id, status) {
             ))}
           </div>
         )}
-        {/* ---------------------------------- */}
 
         <div style={{ marginTop: '15px' }}>
           <StatusButtons current={selectedLead.status} onChange={(status) => onSetStatus(selectedLead.id, status)} labels={t.statusLabels} />
