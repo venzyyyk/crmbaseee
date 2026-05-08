@@ -26,7 +26,7 @@ const LeadSchema = new mongoose.Schema({
 
 const Lead = mongoose.models.Lead || mongoose.model('Lead', LeadSchema);
 
-// ЖЕЛЕЗОБЕТОННОЕ ПОЛУЧЕНИЕ ЛИДОВ
+
 const getLeads = async (req, res) => {
   try {
     const User = mongoose.model('User');
