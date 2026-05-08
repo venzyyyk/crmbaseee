@@ -4,7 +4,7 @@ const User = require('./User');
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    console.log('MongoDB подключена!');
+    console.log('MongoDB connect!');
 
     
     const adminEmail = 'admin@crm.local';
