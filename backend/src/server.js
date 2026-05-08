@@ -18,7 +18,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// --- АВТОРИЗАЦИЯ ---
+//auth
 app.post('/auth/register', auth.register());
 app.post('/auth/login', auth.login());
 
@@ -36,7 +36,7 @@ app.get('/me', auth.authMiddleware, async (req, res) => {
   }
 });
 
-// --- ЛИДЫ ---
+//lead
 app.get('/leads', auth.authMiddleware, leads.getLeads);
 app.post('/leads', auth.authMiddleware, leads.createLead);
 app.post('/leads/import', auth.authMiddleware, leads.importLeads); 
@@ -45,7 +45,7 @@ app.put('/leads/:id', auth.authMiddleware, leads.updateLead);
 app.delete('/leads/:id', auth.authMiddleware, leads.deleteLead);
 app.post('/leads/mass-delete', auth.authMiddleware, leads.massDeleteLeads);
 
-// --- КОМАНДА ---
+//team
 app.get('/team', auth.authMiddleware, async (req, res) => {
   try {
     const currentUser = await User.findById(req.user.id);
@@ -216,7 +216,7 @@ app.get('/analytics', auth.authMiddleware, async (req, res) => {
     const bySource = {};
     sourceAggr.forEach(item => { bySource[item._id || 'Не указано'] = item.count; });
 
-    // --- НОВАЯ ЛОГИКА ДЛЯ ТИМЛИДА И АДМИНА ---
+
     let managerPerformance = [];
     if (currentUser.role === 'admin' || currentUser.role === 'team_lead') {
       const managerStats = await Lead.aggregate([
