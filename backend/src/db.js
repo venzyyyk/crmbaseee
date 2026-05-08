@@ -13,14 +13,14 @@ const connectDB = async () => {
     if (!adminExists) {
       const newAdmin = new User({
         email: adminEmail,
-        passwordHash: 'admin123', 
+        passwordHash: 'admin', 
         role: 'admin'
       });
       await newAdmin.save();
-      console.log('Дефолтный админ создан');
+      console.log('defoltadmin');
     }
   } catch (err) {
-    console.error('Ошибка базы:', err);
+    console.error('error base:', err);
   }
 };
 
