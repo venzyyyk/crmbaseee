@@ -36,7 +36,6 @@ const getLeads = async (req, res) => {
     let query = {};
     
     if (currentUser.role !== 'admin') {
-       // Надежно достаем ID команды (переводим в String)
        let targetTeamId = null;
        if (currentUser.role === 'team_lead') {
            targetTeamId = currentUser._id.toString();
@@ -47,12 +46,12 @@ const getLeads = async (req, res) => {
        if (targetTeamId) {
            query = {
                $or: [
-                   { teamId: targetTeamId }, // Лиды команды (и Тимлид, и Мембер ищут по этому ID)
-                   { ownerId: req.user.id, teamId: null } // Старые/личные лиды
+                   { teamId: targetTeamId }, 
+                   { ownerId: req.user.id, teamId: null }
                ]
            };
        } else {
-           // Если человек реально ни в какой команде
+           
            query = { ownerId: req.user.id };
        }
     }
@@ -69,13 +68,13 @@ const getLeads = async (req, res) => {
   }
 };
 
-// ЖЕЛЕЗОБЕТОННОЕ СОЗДАНИЕ ЛИДОВ
+
 const createLead = async (req, res) => {
   try {
     const User = mongoose.model('User');
     const currentUser = await User.findById(req.user.id);
 
-    // Надежно достаем ID команды
+
     let targetTeamId = null;
     if (currentUser.role === 'team_lead') {
         targetTeamId = currentUser._id.toString();
@@ -86,7 +85,7 @@ const createLead = async (req, res) => {
     const newLead = new Lead({
         ...req.body,
         ownerId: req.user.id,
-        teamId: targetTeamId // Сохраняем правильную строку
+        teamId: targetTeamId 
     });
     await newLead.save();
     
