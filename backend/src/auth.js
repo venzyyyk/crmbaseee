@@ -32,7 +32,6 @@ const login = () => async (req, res) => {
     
     const user = await User.findOne({ email: normEmail });
 
-    // Сверяем пароль с полем passwordHash
     if (!user || user.passwordHash !== String(password)) {
       return res.status(401).json({ message: 'Неверные данные' });
     }
