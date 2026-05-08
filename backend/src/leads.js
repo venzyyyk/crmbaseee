@@ -192,8 +192,8 @@ const massDeleteLeads = async (req, res) => {
         const result = await Lead.deleteMany(query);
         res.json({ ok: true, deletedCount: result.deletedCount });
     } catch (e) {
-        console.error(e);
-        res.status(500).json({ message: 'Ошибка при массовом удалении' });
+
+       
     }
 };
 
