@@ -761,7 +761,6 @@ async function confirmStatusChange(id, status) {
         <p><strong>{t.statusLower}:</strong> {t.statusLabels[selectedLead.status] || selectedLead.status}</p>
         <p><strong>{t.requestLower}:</strong> {selectedLead.clientRequest || '—'}</p>
 
-        {/* --- Історія роботи (Коментарі) --- */}
         {selectedLead.history && selectedLead.history.length > 0 && (
           <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#111', borderRadius: '8px', maxHeight: '150px', overflowY: 'auto' }}>
             <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#888' }}>Історія роботи:</h4>
