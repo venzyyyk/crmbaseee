@@ -168,7 +168,7 @@ app.post('/admin/team-leads', auth.authMiddleware, async (req, res) => {
       teamLead: { id: newUser._id.toString(), email: newUser.email, role: newUser.role } 
     });
   } catch (e) {
-    res.status(500).json({ message: 'Ошибка добавления тимлида: ' + e.message });
+    res.status(500).json({ message: 'Ошибка добавления тимлида: '  });
   }
 });
 //analitika
