@@ -256,7 +256,7 @@ app.get('/analytics', auth.authMiddleware, async (req, res) => {
       managerPerformance 
     });
   } catch (e) {
-    res.status(500).json({ message: 'Ошибка аналитики: ' + e.message });
+    res.status(500).json({ message: 'Ошибка аналитики: ' });
   }
 });
 
